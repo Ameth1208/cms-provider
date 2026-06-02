@@ -1,0 +1,20 @@
+{
+  "title": "Ajustes de empresa",
+  "business_info": "Información del negocio",
+  "business_info_desc": "Nombre y logo de tu empresa",
+  "company_name": "Nombre de la empresa",
+  "company_name_placeholder": "Mi Empresa",
+  "logo_url": "URL del logo",
+  "logo_url_placeholder": "https://ejemplo.com/logo.png",
+  "appearance": "Apariencia",
+  "appearance_desc": "Colores y tipografía de la interfaz",
+  "dark_mode": "Modo oscuro",
+  "dark_mode_desc": "Alternar entre tema claro y oscuro",
+  "custom_colors": "Colores personalizados",
+  "primary": "Primario",
+  "secondary": "Secundario",
+  "accent": "Acento",
+  "font_family": "Tipografía",
+  "preview": "Preview",
+  "section_label": "Configuración"
+}

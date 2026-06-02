@@ -1,0 +1,13 @@
+{
+  "app_name": "CMS Web Manager",
+  "tagline": "Panel de administración",
+  "loading": "Cargando...",
+  "save": "Guardar cambios",
+  "cancel": "Cancelar",
+  "create": "Crear",
+  "delete": "Eliminar",
+  "edit": "Editar",
+  "confirm_delete": "¿Confirmar eliminación?",
+  "no_results": "Sin resultados",
+  "logout": "Cerrar sesión"
+}

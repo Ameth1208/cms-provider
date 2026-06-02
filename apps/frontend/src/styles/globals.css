@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Theme mapped from DESIGN.md — light track (transactional) */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 60 33% 98%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 60 33% 98%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 138 89% 87%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 0 0% 0%;
+    --radius: 0.75rem;
+
+    /* Theme tokens are fixed — no user customization */
+
+    /* DESIGN.md raw tokens */
+    --canvas-night: #000000;
+    --canvas-night-elevated: #0a0a0a;
+    --canvas-light: #ffffff;
+    --canvas-cream: #fbfbf5;
+    --surface-elevated-dark: #1e2c31;
+    --aloe-10: #c1fbd4;
+    --pistachio-10: #d4f9e0;
+    --ink: #000000;
+    --on-primary: #ffffff;
+    --shade-30: #d4d4d8;
+    --shade-40: #a1a1aa;
+    --shade-50: #71717a;
+    --shade-60: #52525b;
+    --shade-70: #3f3f46;
+    --hairline-light: #e4e4e7;
+    --hairline-dark: #1e2c31;
+    --link-cool-1: #9dabad;
+    --link-cool-2: #9797a2;
+    --link-cool-3: #bdbdca;
+    --link-mint: #99b3ad;
+  }
+
+  .dark {
+    /* Theme mapped from DESIGN.md — dark track (cinematic) */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 195 26% 15%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 195 26% 15%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 195 26% 15%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 36%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 195 26% 15%;
+    --input: 195 26% 15%;
+    --ring: 0 0% 100%;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "ss03";
+  }
+}
+
+@keyframes collapsible-down {
+  from { height: 0; opacity: 0; }
+  to { height: var(--radix-collapsible-content-height); opacity: 1; }
+}
+
+@keyframes collapsible-up {
+  from { height: var(--radix-collapsible-content-height); opacity: 1; }
+  to { height: 0; opacity: 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-collapsible-down {
+  animation: collapsible-down 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-collapsible-up {
+  animation: collapsible-up 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-fade-in {
+  animation: fade-in 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

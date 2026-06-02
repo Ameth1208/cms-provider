@@ -1,0 +1,18 @@
+{
+  "home": "Inicio",
+  "catalog": "Catálogo",
+  "catalog_items": "Items",
+  "catalog_categories": "Categorías",
+  "catalog_tags": "Tags",
+  "orders": "Pedidos",
+  "inventory": "Inventario",
+  "campaigns": "Campañas",
+  "users": "Usuarios",
+  "settings": "Ajustes",
+  "nav_main": "Principal",
+  "nav_management": "Gestión",
+  "nav_system": "Sistema",
+  "navigation": "Navegación",
+  "theme_light": "Modo claro",
+  "theme_dark": "Modo oscuro"
+}

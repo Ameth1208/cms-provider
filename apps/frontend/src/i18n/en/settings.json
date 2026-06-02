@@ -1,0 +1,20 @@
+{
+  "title": "Company Settings",
+  "business_info": "Business Info",
+  "business_info_desc": "Company name and logo",
+  "company_name": "Company Name",
+  "company_name_placeholder": "My Company",
+  "logo_url": "Logo URL",
+  "logo_url_placeholder": "https://example.com/logo.png",
+  "appearance": "Appearance",
+  "appearance_desc": "Interface colors and typography",
+  "dark_mode": "Dark mode",
+  "dark_mode_desc": "Toggle between light and dark theme",
+  "custom_colors": "Custom Colors",
+  "primary": "Primary",
+  "secondary": "Secondary",
+  "accent": "Accent",
+  "font_family": "Font Family",
+  "preview": "Preview",
+  "section_label": "Settings"
+}

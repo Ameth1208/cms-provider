@@ -1,0 +1,18 @@
+{
+  "home": "Home",
+  "catalog": "Catalog",
+  "catalog_items": "Items",
+  "catalog_categories": "Categories",
+  "catalog_tags": "Tags",
+  "orders": "Orders",
+  "inventory": "Inventory",
+  "campaigns": "Campaigns",
+  "users": "Users",
+  "settings": "Settings",
+  "nav_main": "Main",
+  "nav_management": "Management",
+  "nav_system": "System",
+  "navigation": "Navigation",
+  "theme_light": "Light mode",
+  "theme_dark": "Dark mode"
+}
