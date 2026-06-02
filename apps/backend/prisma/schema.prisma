@@ -1,0 +1,337 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum CatalogItemType {
+  PRODUCT
+  SERVICE
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+}
+
+enum MovementType {
+  IN
+  OUT
+  ADJUSTMENT
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+// ─── Multi-tenant ───
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logoUrl   String?
+  createdAt DateTime @default(now())
+
+  users          User[]
+  roles          Role[]
+  catalogItems   CatalogItem[]
+  tags           Tag[]
+  categories     Category[]
+  orders         Order[]
+  campaigns      Campaign[]
+  systemSettings SystemSetting[]
+  apiKeys        ApiKey[]
+}
+
+// ─── Auth & Users ───
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  password       String
+  name           String?
+  active         Boolean  @default(true)
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  roles        UserRole[]
+
+  @@index([organizationId])
+}
+
+model UserRole {
+  userId String
+  roleId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+// ─── Roles & Permissions ───
+
+model Role {
+  id             String  @id @default(cuid())
+  name           String
+  description    String?
+  organizationId String
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  permissions  RolePermission[]
+  users        UserRole[]
+
+  @@unique([name, organizationId])
+  @@index([organizationId])
+}
+
+model Permission {
+  id       String @id @default(cuid())
+  resource String
+  action   String
+  name     String
+
+  roles RolePermission[]
+
+  @@unique([resource, action])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+// ─── Catalog ───
+
+model CatalogItem {
+  id             String          @id @default(cuid())
+  name           String
+  slug           String
+  description    String?
+  price          Float
+  type           CatalogItemType
+  sku            String?
+  active         Boolean         @default(true)
+  organizationId String
+  categoryId     String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category     Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags         CatalogItemTag[]
+  media        Media[]
+  inventory    Inventory?
+
+  @@unique([slug, organizationId])
+  @@index([organizationId])
+  @@index([categoryId])
+}
+
+model Tag {
+  id             String @id @default(cuid())
+  name           String
+  slug           String
+  organizationId String
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  catalogItems CatalogItemTag[]
+
+  @@unique([slug, organizationId])
+  @@index([organizationId])
+}
+
+model CatalogItemTag {
+  catalogItemId String
+  tagId         String
+
+  catalogItem CatalogItem @relation(fields: [catalogItemId], references: [id], onDelete: Cascade)
+  tag         Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([catalogItemId, tagId])
+}
+
+model Category {
+  id             String  @id @default(cuid())
+  name           String
+  slug           String
+  parentId       String?
+  organizationId String
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  parent       Category?     @relation("CategoryTree", fields: [parentId], references: [id])
+  children     Category[]    @relation("CategoryTree")
+  catalogItems CatalogItem[]
+
+  @@unique([slug, organizationId])
+  @@index([organizationId])
+  @@index([parentId])
+}
+
+// ─── Media ───
+
+model Media {
+  id            String    @id @default(cuid())
+  url           String
+  type          MediaType
+  alt           String?
+  order         Int       @default(0)
+  catalogItemId String
+  createdAt     DateTime  @default(now())
+
+  catalogItem CatalogItem @relation(fields: [catalogItemId], references: [id], onDelete: Cascade)
+
+  @@index([catalogItemId])
+}
+
+// ─── Orders ───
+
+model Order {
+  id             String      @id @default(cuid())
+  status         OrderStatus @default(PENDING)
+  subtotal       Float
+  discount       Float       @default(0)
+  total          Float
+  customerName   String
+  customerEmail  String
+  customerPhone  String?
+  notes          String?
+  couponCode     String?
+  organizationId String
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items        OrderItem[]
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+model OrderItem {
+  id              String @id @default(cuid())
+  orderId         String
+  catalogItemId   String
+  catalogItemName String
+  quantity        Int
+  unitPrice       Float
+  totalPrice      Float
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+// ─── Inventory ───
+
+model Inventory {
+  id                String @id @default(cuid())
+  catalogItemId     String @unique
+  quantity          Int    @default(0)
+  lowStockThreshold Int    @default(5)
+
+  catalogItem CatalogItem     @relation(fields: [catalogItemId], references: [id], onDelete: Cascade)
+  movements   StockMovement[]
+}
+
+model StockMovement {
+  id          String       @id @default(cuid())
+  inventoryId String
+  type        MovementType
+  quantity    Int
+  reason      String?
+  reference   String?
+  createdAt   DateTime     @default(now())
+
+  inventory Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryId])
+}
+
+// ─── Campaigns & Discounts ───
+
+model Campaign {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  startDate      DateTime
+  endDate        DateTime
+  active         Boolean  @default(true)
+  autoApply      Boolean  @default(false)
+  organizationId String
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  discounts    Discount[]
+
+  @@index([organizationId])
+  @@index([active, startDate, endDate])
+}
+
+model Discount {
+  id         String       @id @default(cuid())
+  type       DiscountType
+  value      Float
+  code       String?
+  maxUses    Int?
+  usedCount  Int          @default(0)
+  campaignId String
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([code])
+  @@index([campaignId])
+}
+
+// ─── Company Settings ───
+
+model SystemSetting {
+  id             String @id @default(cuid())
+  key            String
+  value          String
+  organizationId String
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, key])
+  @@index([organizationId])
+}
+
+model ApiKey {
+  id             String   @id @default(cuid())
+  name           String
+  keyHash        String   @unique
+  keyPrefix      String
+  permissions    String[] @default([])
+  active         Boolean  @default(true)
+  lastUsedAt     DateTime?
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([keyHash])
+}
