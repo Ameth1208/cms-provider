@@ -56,6 +56,17 @@
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "ss03";
   }
+
+  /* Ocultar scrollbars */
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  html {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
 }
 
 @keyframes collapsible-down {
