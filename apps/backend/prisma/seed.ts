@@ -32,8 +32,25 @@ const DEFAULT_USER = {
   name: 'Administrador',
 }
 
-const RESOURCES = ['catalog', 'orders', 'inventory', 'campaigns', 'users', 'roles', 'settings', 'media', 'api_keys'] as const
+const RESOURCES = [
+  'catalog',
+  'orders',
+  'inventory',
+  'content',
+  'campaigns',
+  'users',
+  'roles',
+  'settings',
+  'media',
+  'api_keys',
+  'content',
+  'batches',
+  'reviews',
+] as const
+
 const ACTIONS = ['create', 'read', 'update', 'delete', 'manage'] as const
+
+type PermissionMap = Record<string, string>
 
 async function main() {
   console.log('🌱 Seeding database...')
@@ -45,7 +62,8 @@ async function main() {
   })
   console.log(`  ✓ Organization: ${org.name} (${org.id})`)
 
-  const permissionIds: string[] = []
+  // ─── Permissions ───
+  const permissionMap: PermissionMap = {}
   for (const resource of RESOURCES) {
     for (const action of ACTIONS) {
       const permission = await prisma.permission.upsert({
@@ -53,28 +71,95 @@ async function main() {
         create: { resource, action, name: `${action} ${resource}` },
         update: {},
       })
-      permissionIds.push(permission.id)
+      permissionMap[`${resource}.${action}`] = permission.id
     }
   }
-  console.log(`  ✓ ${permissionIds.length} permissions created`)
+  const totalPermissions = Object.keys(permissionMap).length
+  console.log(`  ✓ ${totalPermissions} permissions created`)
 
-  const role = await prisma.role.upsert({
-    where: { name_organizationId: { name: 'Administrador', organizationId: org.id } },
-    create: {
-      name: 'Administrador',
-      description: 'Acceso completo a todos los módulos',
-      organizationId: org.id,
+  // ─── System Roles ───
+  const allPermIds = Object.values(permissionMap)
+
+  const roleDefinitions = [
+    {
+      name: 'OWNER',
+      description: 'Dueño del negocio. Control total.',
+      permissions: allPermIds,
     },
-    update: {},
-  })
+    {
+      name: 'ADMIN',
+      description: 'Administrador. Acceso completo excepto gestión de suscripción.',
+      permissions: allPermIds.filter((id) => {
+        const key = Object.entries(permissionMap).find(([, v]) => v === id)?.[0]
+        return key !== 'settings.manage'
+      }),
+    },
+    {
+      name: 'MANAGER',
+      description: 'Gestor de operaciones. Puede administrar catálogo, pedidos, inventario, campañas y contenido.',
+      permissions: allPermIds.filter((id) => {
+        const key = Object.entries(permissionMap).find(([, v]) => v === id)?.[0]
+        if (!key) return false
+        const [resource, action] = key.split('.')
+        const excludedResources = ['users', 'roles', 'settings', 'api_keys']
+        if (excludedResources.includes(resource)) {
+          return action === 'read'
+        }
+        return true
+      }),
+    },
+    {
+      name: 'EDITOR',
+      description: 'Editor de contenido. Puede crear y editar catálogo, contenido y campañas. Solo lectura en pedidos e inventario.',
+      permissions: allPermIds.filter((id) => {
+        const key = Object.entries(permissionMap).find(([, v]) => v === id)?.[0]
+        if (!key) return false
+        const [resource, action] = key.split('.')
+        const editorResources = ['catalog', 'content', 'campaigns', 'media', 'reviews']
+        const readOnlyResources = ['orders', 'inventory', 'batches']
+        if (editorResources.includes(resource)) {
+          return ['create', 'read', 'update'].includes(action)
+        }
+        if (readOnlyResources.includes(resource)) {
+          return action === 'read'
+        }
+        return false
+      }),
+    },
+    {
+      name: 'VIEWER',
+      description: 'Solo lectura. Puede ver reportes y catálogos pero no modificarlos.',
+      permissions: allPermIds.filter((id) => {
+        const key = Object.entries(permissionMap).find(([, v]) => v === id)?.[0]
+        return key?.endsWith('.read')
+      }),
+    },
+  ]
 
-  for (const permissionId of permissionIds) {
-    await prisma.rolePermission
-      .create({ data: { roleId: role.id, permissionId } })
-      .catch(() => {})
+  for (const def of roleDefinitions) {
+    const role = await prisma.role.upsert({
+      where: { name_organizationId: { name: def.name, organizationId: org.id } },
+      create: {
+        name: def.name,
+        description: def.description,
+        organizationId: org.id,
+      },
+      update: {
+        description: def.description,
+      },
+    })
+
+    // Clear existing permissions and re-assign
+    await prisma.rolePermission.deleteMany({ where: { roleId: role.id } })
+    await prisma.rolePermission.createMany({
+      data: def.permissions.map((permissionId) => ({ roleId: role.id, permissionId })),
+      skipDuplicates: true,
+    })
+
+    console.log(`  ✓ Role: ${role.name} with ${def.permissions.length} permissions`)
   }
-  console.log(`  ✓ Role: ${role.name} with ${permissionIds.length} permissions`)
 
+  // ─── Default Owner User ───
   const hashedPassword = hashSync(DEFAULT_USER.password, 12)
 
   const user = await prisma.user.upsert({
@@ -88,15 +173,26 @@ async function main() {
     update: {},
   })
 
-  await prisma.userRole
-    .create({ data: { userId: user.id, roleId: role.id } })
-    .catch(() => {})
+  const ownerRole = await prisma.role.findUnique({
+    where: { name_organizationId: { name: 'OWNER', organizationId: org.id } },
+  })
 
-  console.log(`  ✓ User: ${user.email} / ${DEFAULT_USER.password}`)
+  if (ownerRole) {
+    await prisma.userRole
+      .upsert({
+        where: { userId_roleId: { userId: user.id, roleId: ownerRole.id } },
+        create: { userId: user.id, roleId: ownerRole.id },
+        update: {},
+      })
+      .catch(() => {})
+  }
+
+  console.log(`  ✓ User: ${user.email} / ${DEFAULT_USER.password} (OWNER)`)
   console.log('')
   console.log('  ┌──────────────────────────────────────────────┐')
   console.log('  │  Email:    admin@admin.com                   │')
   console.log('  │  Password: admin123                          │')
+  console.log('  │  Role:     OWNER                             │')
   console.log('  └──────────────────────────────────────────────┘')
   console.log('')
   console.log('✅ Seed completed')
