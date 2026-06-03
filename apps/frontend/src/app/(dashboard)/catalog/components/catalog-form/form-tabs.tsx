@@ -4,7 +4,8 @@ import { useCatalogFormStore } from '../../store/catalog-form-store'
 import { useTranslation } from '@/i18n/use-translation'
 
 export function FormTabs() {
-  const { activeTab, setActiveTab } = useCatalogFormStore()
+  const activeTab = useCatalogFormStore((s) => s.activeTab)
+  const setActiveTab = useCatalogFormStore((s) => s.setActiveTab)
   const { t } = useTranslation()
 
   const tabs = [

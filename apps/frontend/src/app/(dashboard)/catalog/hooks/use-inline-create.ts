@@ -19,11 +19,9 @@ function slugify(name: string): string {
 export function useInlineCreate() {
   const { token } = useAuth()
   const { toast } = useToast()
-  const store = useCatalogFormStore()
-
   const createTag = useCallback(async (name: string) => {
     if (!name.trim()) return null
-    store.setCreatingTag(true)
+    useCatalogFormStore.getState().setCreatingTag(true)
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/catalog/tags`, {
         method: 'POST',
@@ -38,21 +36,22 @@ export function useInlineCreate() {
       })
       if (!res.ok) throw new Error('Error creando tag')
       const tag = await res.json()
-      store.setTags([...store.tags, tag])
-      store.toggleTag(tag.id)
+      const state = useCatalogFormStore.getState()
+      state.setTags([...state.tags, tag])
+      state.toggleTag(tag.id)
       toast({ title: 'Tag creado', variant: 'default' })
       return tag
     } catch {
       toast({ title: 'Error al crear tag', variant: 'destructive' })
       return null
     } finally {
-      store.setCreatingTag(false)
+      useCatalogFormStore.getState().setCreatingTag(false)
     }
-  }, [token, store, toast])
+  }, [token, toast])
 
   const createCategory = useCallback(async (name: string) => {
     if (!name.trim()) return null
-    store.setCreatingCat(true)
+    useCatalogFormStore.getState().setCreatingCat(true)
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/catalog/categories`, {
         method: 'POST',
@@ -67,17 +66,18 @@ export function useInlineCreate() {
       })
       if (!res.ok) throw new Error('Error creando categoría')
       const cat = await res.json()
-      store.setCategories([...store.categories, cat])
-      store.setForm({ categoryId: cat.id })
+      const state = useCatalogFormStore.getState()
+      state.setCategories([...state.categories, cat])
+      state.setForm({ categoryId: cat.id })
       toast({ title: 'Categoría creada', variant: 'default' })
       return cat
     } catch {
       toast({ title: 'Error al crear categoría', variant: 'destructive' })
       return null
     } finally {
-      store.setCreatingCat(false)
+      useCatalogFormStore.getState().setCreatingCat(false)
     }
-  }, [token, store, toast])
+  }, [token, toast])
 
   return { createTag, createCategory }
 }

@@ -9,14 +9,15 @@ import { Separator } from '@/components/ui/separator'
 import { useTranslation } from '@/i18n/use-translation'
 
 const labels = [
-  { value: 'new', labelKey: 'new_label', color: 'bg-zinc-500' },
-  { value: 'bestseller', labelKey: 'bestseller_label', color: 'bg-orange-500' },
-  { value: 'sale', labelKey: 'sale_label', color: 'bg-red-500' },
-  { value: 'limited', labelKey: 'limited_label', color: 'bg-violet-500' },
+  { value: 'new', labelKey: 'new_label', color: 'bg-blue-500', selected: 'bg-blue-500/15 text-blue-600 dark:text-blue-400 ring-1 ring-blue-500/30' },
+  { value: 'bestseller', labelKey: 'bestseller_label', color: 'bg-amber-500', selected: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 ring-1 ring-amber-500/30' },
+  { value: 'sale', labelKey: 'sale_label', color: 'bg-red-500', selected: 'bg-red-500/15 text-red-600 dark:text-red-400 ring-1 ring-red-500/30' },
+  { value: 'limited', labelKey: 'limited_label', color: 'bg-purple-500', selected: 'bg-purple-500/15 text-purple-600 dark:text-purple-400 ring-1 ring-purple-500/30' },
 ]
 
 export function SeoVisibilitySection() {
-  const { form, setForm } = useCatalogFormStore()
+  const form = useCatalogFormStore((s) => s.form)
+  const setForm = useCatalogFormStore((s) => s.setForm)
   const { t } = useTranslation()
 
   const charCount = form.metaDescription?.length || 0
@@ -121,7 +122,7 @@ export function SeoVisibilitySection() {
                   onClick={() => setForm({ label: l.value })}
                   className={`px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center gap-1.5 ${
                     form.label === l.value
-                      ? 'bg-primary text-primary-foreground'
+                      ? l.selected
                       : 'bg-muted hover:bg-accent'
                   }`}
                 >

@@ -43,7 +43,8 @@ function ChipGroup({
 }
 
 export function DetailsSection() {
-  const { form, setForm } = useCatalogFormStore()
+  const form = useCatalogFormStore((s) => s.form)
+  const setForm = useCatalogFormStore((s) => s.setForm)
   const { t } = useTranslation()
   const isProduct = form.type === 'PRODUCT'
 

@@ -7,39 +7,40 @@ import { useCatalogStore } from '../store/catalog-store'
 
 export function useCatalog() {
   const { token } = useAuth()
-  const { items, loading, setItems, setLoading, addItem, updateItem, removeItem } = useCatalogStore()
+  const items = useCatalogStore((s) => s.items)
+  const loading = useCatalogStore((s) => s.loading)
 
   const fetchItems = useCallback(async (params?: Record<string, string>) => {
     if (!token) return
-    setLoading(true)
+    useCatalogStore.getState().setLoading(true)
     try {
       const qs = params ? '?' + new URLSearchParams(params).toString() : ''
       const data = await api.get<any[]>(`/catalog${qs}`, token)
-      setItems(data)
+      useCatalogStore.getState().setItems(data)
     } finally {
-      setLoading(false)
+      useCatalogStore.getState().setLoading(false)
     }
-  }, [token, setItems, setLoading])
+  }, [token])
 
   const createItem = useCallback(async (body: any) => {
     if (!token) return
     const item = await api.post('/catalog', body, token)
-    addItem(item)
+    useCatalogStore.getState().addItem(item)
     return item
-  }, [token, addItem])
+  }, [token])
 
   const editItem = useCallback(async (id: string, body: any) => {
     if (!token) return
     const item = await api.put(`/catalog/${id}`, body, token)
-    updateItem(id, item)
+    useCatalogStore.getState().updateItem(id, item)
     return item
-  }, [token, updateItem])
+  }, [token])
 
   const deleteItem = useCallback(async (id: string) => {
     if (!token) return
     await api.delete(`/catalog/${id}`, token)
-    removeItem(id)
-  }, [token, removeItem])
+    useCatalogStore.getState().removeItem(id)
+  }, [token])
 
   return { items, loading, fetchItems, createItem, editItem, deleteItem }
 }

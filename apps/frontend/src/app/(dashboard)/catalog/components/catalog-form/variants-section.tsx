@@ -33,7 +33,9 @@ function generateId() {
 }
 
 export function VariantsSection() {
-  const { form, variants, setVariants } = useCatalogFormStore()
+  const form = useCatalogFormStore((s) => s.form)
+  const variants = useCatalogFormStore((s) => s.variants)
+  const setVariants = useCatalogFormStore((s) => s.setVariants)
   const { t } = useTranslation()
   const isProduct = form.type === 'PRODUCT'
 

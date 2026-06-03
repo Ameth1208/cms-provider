@@ -9,18 +9,25 @@ import { useMediaUpload } from '../../hooks/use-media-upload'
 import { useTranslation } from '@/i18n/use-translation'
 
 export function MediaSection() {
-  const store = useCatalogFormStore()
+  const media = useCatalogFormStore((s) => s.media)
+  const pendingPreviews = useCatalogFormStore((s) => s.pendingPreviews)
+  const dragOver = useCatalogFormStore((s) => s.dragOver)
+  const setDragOver = useCatalogFormStore((s) => s.setDragOver)
+  const addPendingFiles = useCatalogFormStore((s) => s.addPendingFiles)
+  const removePendingFile = useCatalogFormStore((s) => s.removePendingFile)
+  const removeMediaById = useCatalogFormStore((s) => s.removeMediaById)
+  const moveMedia = useCatalogFormStore((s) => s.moveMedia)
   const { remove, reorder } = useMediaUpload()
   const { t } = useTranslation()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const docInputRef = useRef<HTMLInputElement>(null)
 
   // Separate media by type
-  const images = store.media.filter((m) => m.type === 'IMAGE')
-  const videos = store.media.filter((m) => m.type === 'VIDEO')
-  const documents = store.media.filter((m) => m.type === 'DOCUMENT')
-  const imagePreviews = store.pendingPreviews.filter((p) => p.file.type.startsWith('image/') || p.file.type.startsWith('video/'))
-  const docPreviews = store.pendingPreviews.filter((p) =>
+  const images = media.filter((m) => m.type === 'IMAGE')
+  const videos = media.filter((m) => m.type === 'VIDEO')
+  const documents = media.filter((m) => m.type === 'DOCUMENT')
+  const imagePreviews = pendingPreviews.filter((p) => p.file.type.startsWith('image/') || p.file.type.startsWith('video/'))
+  const docPreviews = pendingPreviews.filter((p) =>
     p.file.type === 'application/pdf' ||
     p.file.type.includes('document') ||
     p.file.type.includes('sheet')
@@ -51,17 +58,17 @@ export function MediaSection() {
 
   async function handleRemoveExisting(id: string) {
     await remove(id)
-    store.removeMediaById(id)
+    removeMediaById(id)
   }
 
   async function handleMove(index: number, direction: 'up' | 'down') {
-    store.moveMedia(index, direction)
+    moveMedia(index, direction)
     const newMedia = useCatalogFormStore.getState().media
     await reorder(newMedia.map((m, i) => ({ id: m.id, order: i })))
   }
 
   function handleRemovePending(index: number) {
-    store.removePendingFile(index)
+    removePendingFile(index)
   }
 
   return (
@@ -110,7 +117,7 @@ export function MediaSection() {
                         <Icon icon="lucide:arrow-up" className="h-3 w-3" />
                       </button>
                     )}
-                    {!m.isPending && index < store.media.length - 1 && (
+                    {!m.isPending && index < media.length - 1 && (
                       <button
                         type="button"
                         onClick={() => handleMove(index, 'down')}
@@ -140,16 +147,16 @@ export function MediaSection() {
             onClick={() => fileInputRef.current?.click()}
             onDrop={(e) => {
               e.preventDefault()
-              store.setDragOver(false)
-              store.addPendingFiles(e.dataTransfer.files)
+              setDragOver(false)
+              addPendingFiles(e.dataTransfer.files)
             }}
             onDragOver={(e) => {
               e.preventDefault()
-              store.setDragOver(true)
+              setDragOver(true)
             }}
-            onDragLeave={() => store.setDragOver(false)}
+            onDragLeave={() => setDragOver(false)}
             className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-              store.dragOver
+              dragOver
                 ? 'border-primary bg-primary/5'
                 : 'border-border hover:border-primary/50 hover:bg-accent/50'
             }`}
@@ -166,7 +173,7 @@ export function MediaSection() {
             accept="image/*,video/*"
             multiple
             className="hidden"
-            onChange={(e) => store.addPendingFiles(e.target.files)}
+            onChange={(e) => addPendingFiles(e.target.files)}
           />
         </CardContent>
       </Card>
@@ -242,7 +249,7 @@ export function MediaSection() {
             accept=".pdf,application/pdf"
             multiple
             className="hidden"
-            onChange={(e) => store.addPendingFiles(e.target.files)}
+            onChange={(e) => addPendingFiles(e.target.files)}
           />
         </CardContent>
       </Card>

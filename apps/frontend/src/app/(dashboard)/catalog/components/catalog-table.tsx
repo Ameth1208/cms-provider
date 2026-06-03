@@ -6,6 +6,14 @@ import type { CatalogItem } from '@cms/shared'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 interface Props {
   items: CatalogItem[]
@@ -27,24 +35,23 @@ export function CatalogTable({ items, onDelete }: Props) {
   return (
     <Card>
       <CardContent className="p-0">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-secondary/50">
-              <th className="text-left px-4 py-3.5 font-normal text-muted-foreground text-xs tracking-wider uppercase w-14">Img</th>
-              <th className="text-left px-4 py-3.5 font-normal text-muted-foreground text-xs tracking-wider uppercase">Nombre</th>
-              <th className="text-left px-4 py-3.5 font-normal text-muted-foreground text-xs tracking-wider uppercase">Tipo</th>
-              <th className="text-left px-4 py-3.5 font-normal text-muted-foreground text-xs tracking-wider uppercase">Tags</th>
-              <th className="text-left px-4 py-3.5 font-normal text-muted-foreground text-xs tracking-wider uppercase">Precio</th>
-              <th className="text-left px-4 py-3.5 font-normal text-muted-foreground text-xs tracking-wider uppercase">SKU</th>
-              <th className="text-left px-4 py-3.5 font-normal text-muted-foreground text-xs tracking-wider uppercase">Estado</th>
-              <th className="text-right px-4 py-3.5 font-normal text-muted-foreground text-xs tracking-wider uppercase">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-secondary/50 hover:bg-secondary/50">
+              <TableHead className="w-14 text-xs tracking-wider uppercase">Img</TableHead>
+              <TableHead className="text-xs tracking-wider uppercase">Nombre</TableHead>
+              <TableHead className="text-xs tracking-wider uppercase">Tipo</TableHead>
+              <TableHead className="text-xs tracking-wider uppercase">Tags</TableHead>
+              <TableHead className="text-xs tracking-wider uppercase">Precio</TableHead>
+              <TableHead className="text-xs tracking-wider uppercase">SKU</TableHead>
+              <TableHead className="text-xs tracking-wider uppercase">Estado</TableHead>
+              <TableHead className="text-right text-xs tracking-wider uppercase">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {items.map((item) => (
-              <tr key={item.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors duration-200">
-                {/* Thumbnail */}
-                <td className="px-4 py-3">
+              <TableRow key={item.id}>
+                <TableCell>
                   <Link href={`/catalog/${item.id}`}>
                     <div className="h-10 w-10 rounded-lg border bg-muted overflow-hidden">
                       {item.media && item.media.length > 0 ? (
@@ -60,24 +67,21 @@ export function CatalogTable({ items, onDelete }: Props) {
                       )}
                     </div>
                   </Link>
-                </td>
+                </TableCell>
 
-                {/* Name */}
-                <td className="px-4 py-3">
+                <TableCell>
                   <Link href={`/catalog/${item.id}`} className="font-medium hover:text-primary transition-colors line-clamp-1">
                     {item.name}
                   </Link>
-                </td>
+                </TableCell>
 
-                {/* Type */}
-                <td className="px-4 py-3">
+                <TableCell>
                   <Badge variant="secondary" className="font-light text-[10px]">
                     {item.type === 'PRODUCT' ? 'Producto' : 'Servicio'}
                   </Badge>
-                </td>
+                </TableCell>
 
-                {/* Tags */}
-                <td className="px-4 py-3">
+                <TableCell>
                   <div className="flex flex-wrap gap-1 max-w-[140px]">
                     {item.tags?.slice(0, 2).map((t: any) => (
                       <Badge key={t.tag?.id || t.id} variant="outline" className="text-[9px] font-light px-1.5 py-0">
@@ -93,10 +97,9 @@ export function CatalogTable({ items, onDelete }: Props) {
                       <span className="text-muted-foreground text-[10px]">—</span>
                     )}
                   </div>
-                </td>
+                </TableCell>
 
-                {/* Price */}
-                <td className="px-4 py-3">
+                <TableCell>
                   {item.discountType && item.discountValue > 0 ? (
                     <div className="flex flex-col">
                       <span className="font-medium">
@@ -113,20 +116,17 @@ export function CatalogTable({ items, onDelete }: Props) {
                   ) : (
                     <span className="font-light">${item.price.toFixed(2)}</span>
                   )}
-                </td>
+                </TableCell>
 
-                {/* SKU */}
-                <td className="px-4 py-3 text-muted-foreground font-light text-xs">{item.sku || '—'}</td>
+                <TableCell className="text-muted-foreground font-light text-xs">{item.sku || '—'}</TableCell>
 
-                {/* Status */}
-                <td className="px-4 py-3">
+                <TableCell>
                   <Badge variant={item.active ? 'default' : 'secondary'} className="font-light text-[10px]">
                     {item.active ? 'Activo' : 'Inactivo'}
                   </Badge>
-                </td>
+                </TableCell>
 
-                {/* Actions */}
-                <td className="px-4 py-3 text-right">
+                <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
                     <Link href={`/catalog/${item.id}`}>
                       <Button variant="ghost" size="sm" className="h-8 text-muted-foreground hover:text-foreground">
@@ -138,11 +138,11 @@ export function CatalogTable({ items, onDelete }: Props) {
                       <Icon icon="lucide:trash-2" className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   )

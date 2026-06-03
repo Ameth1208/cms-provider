@@ -8,16 +8,20 @@ import { useCatalogFormStore } from '../../store/catalog-form-store'
 import { useTranslation } from '@/i18n/use-translation'
 
 const labelMap: Record<string, { labelKey: string; color: string }> = {
-  new: { labelKey: 'new_label', color: 'bg-zinc-500' },
-  bestseller: { labelKey: 'bestseller_label', color: 'bg-orange-500' },
+  new: { labelKey: 'new_label', color: 'bg-blue-500' },
+  bestseller: { labelKey: 'bestseller_label', color: 'bg-amber-500' },
   sale: { labelKey: 'sale_label', color: 'bg-red-500' },
-  limited: { labelKey: 'limited_label', color: 'bg-violet-500' },
+  limited: { labelKey: 'limited_label', color: 'bg-purple-500' },
 }
 
 export function ProductPreview() {
-  const store = useCatalogFormStore()
+  const form = useCatalogFormStore((s) => s.form)
+  const categories = useCatalogFormStore((s) => s.categories)
+  const tags = useCatalogFormStore((s) => s.tags)
+  const media = useCatalogFormStore((s) => s.media)
+  const pendingPreviews = useCatalogFormStore((s) => s.pendingPreviews)
+  const variants = useCatalogFormStore((s) => s.variants)
   const { t } = useTranslation()
-  const { form, categories, tags, media, pendingPreviews, variants } = store
 
   const categoryName = categories.find((c) => c.id === form.categoryId)?.name
   const selectedTagNames = tags.filter((t) => form.tagIds.includes(t.id)).map((t) => t.name)
@@ -74,7 +78,7 @@ export function ProductPreview() {
             </span>
           )}
           {form.featured && (
-            <span className="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] font-medium bg-orange-500 text-white">
+            <span className="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500 text-white">
               {t('featured_product')}
             </span>
           )}

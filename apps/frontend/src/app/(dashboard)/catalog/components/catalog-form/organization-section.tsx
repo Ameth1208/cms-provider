@@ -283,7 +283,11 @@ function TagInput({ tags, value, onChange, onCreate, placeholder }: TagInputProp
 }
 
 export function OrganizationSection() {
-  const store = useCatalogFormStore()
+  const categories = useCatalogFormStore((s) => s.categories)
+  const tags = useCatalogFormStore((s) => s.tags)
+  const categoryId = useCatalogFormStore((s) => s.form.categoryId)
+  const tagIds = useCatalogFormStore((s) => s.form.tagIds)
+  const setForm = useCatalogFormStore((s) => s.setForm)
   const { createTag, createCategory } = useInlineCreate()
   const { t } = useTranslation()
 
@@ -296,12 +300,12 @@ export function OrganizationSection() {
         </CardHeader>
         <CardContent>
           <CategorySelect
-            categories={store.categories}
-            value={store.form.categoryId}
-            onChange={(id) => store.setForm({ categoryId: id })}
+            categories={categories}
+            value={categoryId}
+            onChange={(id) => setForm({ categoryId: id })}
             onCreate={async (name) => {
               const cat = await createCategory(name)
-              if (cat) store.setForm({ categoryId: cat.id })
+              if (cat) setForm({ categoryId: cat.id })
             }}
             placeholder={t('no_category')}
           />
@@ -315,9 +319,9 @@ export function OrganizationSection() {
         </CardHeader>
         <CardContent>
           <TagInput
-            tags={store.tags}
-            value={store.form.tagIds}
-            onChange={(ids) => store.setForm({ tagIds: ids })}
+            tags={tags}
+            value={tagIds}
+            onChange={(ids) => setForm({ tagIds: ids })}
             onCreate={async (name) => {
               const tag = await createTag(name)
               return tag

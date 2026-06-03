@@ -22,7 +22,9 @@ interface Props {
 }
 
 export function BasicInfoSection({ isNew }: Props) {
-  const { form, setForm, setFormName } = useCatalogFormStore()
+  const form = useCatalogFormStore((s) => s.form)
+  const setForm = useCatalogFormStore((s) => s.setForm)
+  const setFormName = useCatalogFormStore((s) => s.setFormName)
   const { t } = useTranslation()
   const [showDiscount, setShowDiscount] = useState(form.discountType !== '')
 
