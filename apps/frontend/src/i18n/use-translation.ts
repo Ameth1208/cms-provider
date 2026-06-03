@@ -10,6 +10,7 @@ import es_categories from './es/categories.json'
 import es_tags from './es/tags.json'
 import es_dashboard from './es/dashboard.json'
 import es_api_keys from './es/api-keys.json'
+import es_users from './es/users.json'
 import en_common from './en/common.json'
 import en_auth from './en/auth.json'
 import en_nav from './en/nav.json'
@@ -19,6 +20,7 @@ import en_categories from './en/categories.json'
 import en_tags from './en/tags.json'
 import en_dashboard from './en/dashboard.json'
 import en_api_keys from './en/api-keys.json'
+import en_users from './en/users.json'
 
 type Messages = Record<string, string>
 
@@ -26,12 +28,12 @@ const messages: Record<string, Messages> = {
   es: {
     ...es_common, ...es_auth, ...es_nav, ...es_settings,
     ...es_catalog, ...es_categories, ...es_tags, ...es_dashboard,
-    ...es_api_keys,
+    ...es_api_keys, ...es_users,
   },
   en: {
     ...en_common, ...en_auth, ...en_nav, ...en_settings,
     ...en_catalog, ...en_categories, ...en_tags, ...en_dashboard,
-    ...en_api_keys,
+    ...en_api_keys, ...en_users,
   },
 }
 
