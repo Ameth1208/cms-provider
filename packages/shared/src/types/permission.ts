@@ -1,4 +1,17 @@
-export type Resource = 'catalog' | 'orders' | 'inventory' | 'campaigns' | 'users' | 'roles' | 'settings' | 'media' | 'api_keys'
+export type Resource =
+  | 'catalog'
+  | 'orders'
+  | 'inventory'
+  | 'campaigns'
+  | 'users'
+  | 'roles'
+  | 'settings'
+  | 'media'
+  | 'api_keys'
+  | 'content'
+  | 'batches'
+  | 'reviews'
+
 export type Action = 'create' | 'read' | 'update' | 'delete' | 'manage'
 
 export interface Permission {

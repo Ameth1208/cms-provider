@@ -16,6 +16,8 @@ export interface AuthUser {
   organizationId: string
   organizationName: string
   permissions: { resource: string; action: string }[]
+  roles: string[]
+  modulesEnabled: string[]
 }
 
 export interface JwtPayload {
@@ -23,4 +25,5 @@ export interface JwtPayload {
   email: string
   organizationId: string
   permissions: { resource: string; action: string }[]
+  roles: string[]
 }

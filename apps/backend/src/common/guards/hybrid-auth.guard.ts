@@ -34,11 +34,22 @@ export class HybridAuthGuard implements CanActivate {
           throw new UnauthorizedException('Invalid token')
         }
 
+        // Fallback: si el token antiguo no tiene roles, los buscamos en BD
+        let roles: string[] = payload.roles || []
+        if (!roles.length) {
+          const userRoles = await this.prisma.userRole.findMany({
+            where: { userId: user.id },
+            include: { role: { select: { name: true } } },
+          })
+          roles = userRoles.map((ur) => ur.role.name)
+        }
+
         request.user = {
           sub: user.id,
           email: user.email,
           organizationId: user.organizationId,
           permissions: payload.permissions || [],
+          roles,
         }
 
         return true

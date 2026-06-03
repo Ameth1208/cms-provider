@@ -12,6 +12,8 @@ import { CampaignsModule } from './modules/campaigns/campaigns.module'
 import { CompanySettingsModule } from './modules/company-settings/company-settings.module'
 import { ApiKeysModule } from './modules/api-keys/api-keys.module'
 import { ReviewsModule } from './modules/reviews/reviews.module'
+import { ContentModule } from './modules/content/content.module'
+import { AdminModule } from './modules/admin/admin.module'
 import { StorageModule } from './common/storage/storage.module'
 
 @Module({
@@ -33,6 +35,8 @@ import { StorageModule } from './common/storage/storage.module'
     CompanySettingsModule,
     ApiKeysModule,
     ReviewsModule,
+    ContentModule,
+    AdminModule,
   ],
 })
 export class AppModule {}
