@@ -1,54 +1,28 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useAuth } from '@/lib/auth-context'
-import { api } from '@/lib/api-client'
+import { useEffect } from 'react'
+import { useUsers } from './hooks/use-users'
+import { UsersHeader } from './components/users-header'
+import { UsersList } from './components/users-list'
+import { UserCreateDialog } from './components/user-create-dialog'
+import { UserEditDialog } from './components/user-edit-dialog'
+import { UserDeleteDialog } from './components/user-delete-dialog'
 
 export default function UsersPage() {
-  const { token } = useAuth()
-  const [users, setUsers] = useState<any[]>([])
+  const { fetchUsers, fetchRoles } = useUsers()
 
   useEffect(() => {
-    if (!token) return
-    api.get<any[]>('/users', token).then(setUsers)
-  }, [token])
+    fetchUsers()
+    fetchRoles()
+  }, [fetchUsers, fetchRoles])
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Usuarios</h1>
-
-      <div className="bg-background rounded-xl border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="text-left px-4 py-3">Nombre</th>
-              <th className="text-left px-4 py-3">Email</th>
-              <th className="text-left px-4 py-3">Roles</th>
-              <th className="text-left px-4 py-3">Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user: any) => (
-              <tr key={user.id} className="border-b hover:bg-muted/30">
-                <td className="px-4 py-3 font-medium">{user.name || '—'}</td>
-                <td className="px-4 py-3">{user.email}</td>
-                <td className="px-4 py-3">
-                  {user.roles.map((r: any) => (
-                    <span key={r.role.id} className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full mr-1">
-                      {r.role.name}
-                    </span>
-                  ))}
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${user.active ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/15 text-red-600 dark:text-red-400'}`}>
-                    {user.active ? 'Activo' : 'Inactivo'}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="space-y-6">
+      <UsersHeader />
+      <UsersList />
+      <UserCreateDialog />
+      <UserEditDialog />
+      <UserDeleteDialog />
     </div>
   )
 }
