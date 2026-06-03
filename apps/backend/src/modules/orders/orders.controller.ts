@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, Query, UseGuards } from '@nestjs/common'
+import { Controller, Get, Post, Put, Param, Body, Query, UseGuards } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { OrdersService } from './orders.service'
 import { HybridAuthGuard } from '../../common/guards/hybrid-auth.guard'
@@ -43,6 +43,30 @@ export class OrdersController {
     couponCode?: string
   }, @CurrentUser('organizationId') orgId: string) {
     return this.orders.create(body, orgId)
+  }
+
+  @Put(':id')
+  @UseGuards(HybridAuthGuard, PermissionGuard)
+  @RequirePermission('orders', 'update')
+  update(
+    @Param('id') id: string,
+    @Body() body: {
+      status?: string
+      customerName?: string
+      customerEmail?: string
+      customerPhone?: string
+      shippingAddress?: string
+      shippingCity?: string
+      shippingState?: string
+      shippingZip?: string
+      shippingCountry?: string
+      carrier?: string
+      trackingNumber?: string
+      notes?: string
+    },
+    @CurrentUser('organizationId') orgId: string,
+  ) {
+    return this.orders.update(id, body, orgId)
   }
 
   @Post(':id/status')

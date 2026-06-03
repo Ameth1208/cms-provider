@@ -118,18 +118,43 @@ export class OrdersService {
     return order
   }
 
-  async updateStatus(id: string, status: string, organizationId: string) {
+  async update(id: string, data: {
+    status?: string
+    customerName?: string
+    customerEmail?: string
+    customerPhone?: string
+    shippingAddress?: string
+    shippingCity?: string
+    shippingState?: string
+    shippingZip?: string
+    shippingCountry?: string
+    carrier?: string
+    trackingNumber?: string
+    notes?: string
+  }, organizationId: string) {
     const order = await this.prisma.order.findFirst({ where: { id, organizationId } })
     if (!order) throw new NotFoundException('Order not found')
 
+    const updateData: any = { ...data }
+    if (data.status === 'SHIPPED' && !order.shippedAt) {
+      updateData.shippedAt = new Date()
+    }
+    if (data.status === 'DELIVERED' && !order.deliveredAt) {
+      updateData.deliveredAt = new Date()
+    }
+
     const updated = await this.prisma.order.update({
       where: { id },
-      data: { status: status as any },
+      data: updateData,
       include: { items: true },
     })
 
     this.gateway.emitOrderStatus(updated)
     return updated
+  }
+
+  async updateStatus(id: string, status: string, organizationId: string) {
+    return this.update(id, { status }, organizationId)
   }
 
   async getStats(organizationId: string) {

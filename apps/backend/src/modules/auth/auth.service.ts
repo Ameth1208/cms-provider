@@ -17,7 +17,7 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { email: data.email },
       include: {
-        organization: true,
+        organization: { select: { id: true, name: true, modulesEnabled: true } },
         roles: {
           include: {
             role: {
@@ -48,11 +48,14 @@ export class AuthService {
       })),
     )
 
+    const roles = user.roles.map((ur) => ur.role.name)
+
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       organizationId: user.organizationId,
       permissions,
+      roles,
     }
 
     return {
@@ -68,6 +71,8 @@ export class AuthService {
         organizationId: user.organizationId,
         organizationName: user.organization.name,
         permissions,
+        roles,
+        modulesEnabled: user.modulesEnabled?.length > 0 ? user.modulesEnabled : user.organization.modulesEnabled,
       },
     }
   }
@@ -87,17 +92,15 @@ export class AuthService {
       },
     })
 
-    const adminRole = await this.prisma.role.create({
-      data: {
-        name: 'Administrador',
-        description: 'Full access to all resources',
-        organizationId: org.id,
-      },
-    })
-
-    const resources = ['catalog', 'orders', 'inventory', 'campaigns', 'users', 'roles', 'settings', 'media']
+    const resources = [
+      'catalog', 'orders', 'inventory', 'campaigns',
+      'users', 'roles', 'settings', 'media', 'api_keys',
+      'content', 'batches', 'reviews',
+    ]
     const actions = ['create', 'read', 'update', 'delete', 'manage']
 
+    // Upsert all permissions
+    const permissionIds: string[] = []
     for (const resource of resources) {
       for (const action of actions) {
         const permission = await this.prisma.permission.upsert({
@@ -105,15 +108,23 @@ export class AuthService {
           create: { resource, action, name: `${action} ${resource}` },
           update: {},
         })
-
-        await this.prisma.rolePermission.create({
-          data: {
-            roleId: adminRole.id,
-            permissionId: permission.id,
-          },
-        })
+        permissionIds.push(permission.id)
       }
     }
+
+    // Create OWNER role with all permissions
+    const ownerRole = await this.prisma.role.create({
+      data: {
+        name: 'OWNER',
+        description: 'Dueño del negocio. Control total.',
+        organizationId: org.id,
+      },
+    })
+
+    await this.prisma.rolePermission.createMany({
+      data: permissionIds.map((permissionId) => ({ roleId: ownerRole.id, permissionId })),
+      skipDuplicates: true,
+    })
 
     const user = await this.prisma.user.create({
       data: {
@@ -127,11 +138,55 @@ export class AuthService {
     await this.prisma.userRole.create({
       data: {
         userId: user.id,
-        roleId: adminRole.id,
+        roleId: ownerRole.id,
       },
     })
 
     return this.login({ email: data.email, password: data.password })
+  }
+
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        organization: { select: { id: true, name: true, modulesEnabled: true } },
+        roles: {
+          include: {
+            role: {
+              include: {
+                permissions: {
+                  include: { permission: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!user) {
+      throw new UnauthorizedException('User not found')
+    }
+
+    const permissions = user.roles.flatMap((ur) =>
+      ur.role.permissions.map((rp) => ({
+        resource: rp.permission.resource,
+        action: rp.permission.action,
+      })),
+    )
+
+    const roles = user.roles.map((ur) => ur.role.name)
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      organizationId: user.organizationId,
+      organizationName: user.organization.name,
+      permissions,
+      roles,
+      modulesEnabled: user.modulesEnabled?.length > 0 ? user.modulesEnabled : user.organization.modulesEnabled,
+    }
   }
 
   async refresh(token: string): Promise<{ accessToken: string }> {
@@ -145,6 +200,7 @@ export class AuthService {
         email: decoded.email,
         organizationId: decoded.organizationId,
         permissions: decoded.permissions,
+        roles: decoded.roles || [],
       }
 
       return { accessToken: this.jwt.sign(newPayload) }

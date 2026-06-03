@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common'
+import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { AuthService } from './auth.service'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
@@ -24,10 +24,10 @@ export class AuthController {
     return this.auth.refresh(body.refreshToken)
   }
 
-  @Post('me')
+  @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  getProfile(@CurrentUser() user: any) {
-    return user
+  getProfile(@CurrentUser('sub') userId: string) {
+    return this.auth.getProfile(userId)
   }
 }
