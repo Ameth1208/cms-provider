@@ -71,15 +71,61 @@ El owner define qué módulos están disponibles para su negocio. Esto permite:
 - Mantener la UI limpia mostrando solo lo que el cliente usa.
 
 Módulos actuales planeados:
-- `catalog` — Catálogo de productos
-- `inventory` — Inventario y stock
+- `catalog` — Catálogo de productos y servicios
+- `inventory` — Gestión de stock vinculada al catálogo (no productos independientes)
 - `orders` — Pedidos
 - `campaigns` — Campañas de marketing
+- `content` — Gestión de contenido del sitio web (homepage, carruseles, secciones)
 - `users` — Gestión de usuarios del equipo
 - `apiKeys` — API keys para integraciones
 - `reviews` — Reseñas de clientes
 - `analytics` — Analíticas y reportes (futuro)
 - `settings` — Configuración del negocio
+
+### 3.2.1 Inventario y Lotes (Batch Tracking)
+
+El módulo de inventario **no crea productos nuevos**. Los productos se crean en el catálogo, y el inventario gestiona su stock. Además, cada entrada de stock se registra como un **lote**:
+
+**Campos de lote:**
+- `batchNumber` — Número de lote (obligatorio, puede ser auto-generado)
+- `catalogItemId` / `variantId` — Producto o variante asociada
+- `quantity` — Cantidad recibida
+- `remainingQuantity` — Cantidad disponible
+- `costPerUnit` — Costo por unidad (opcional, para margen)
+- `receivedAt` — Fecha de entrada
+- `expiresAt` — Fecha de vencimiento (opcional, para productos perecederos)
+- `supplier` — Proveedor (opcional)
+- `notes` — Notas
+
+**Reglas:**
+- Stock out (venta/pedido) descuenta del lote más antiguo primero (FIFO por defecto).
+- Un producto puede tener múltiples lotes abiertos.
+- Stock total = suma de `remainingQuantity` de todos los lotes activos.
+- Alerta de stock bajo por producto/variante.
+- Alerta de lotes próximos a vencer.
+
+### 3.2.2 Content Site Web (Gestión de Contenido del Sitio)
+
+Módulo para administrar el contenido dinámico que se muestra en la página de inicio del sitio web del cliente. **No modifica el diseño visual** del tema oficial, solo define qué contenido aparece en cada sección.
+
+**Secciones gestionables:**
+- **Hero / Carrusel principal** — Slides con imagen, título, subtítulo, CTA y link. Orden arrastrable.
+- **Productos destacados** — Selección manual de productos del catálogo que aparecen en la sección "Destacados" de la homepage.
+- **Productos nuevos** — Selección manual o automática (últimos X productos activos) que aparecen en "Novedades".
+- **Promociones / Banners** — Bloques promocionales con imagen, texto y link. Pueden ser múltiples y posicionarse en distintos lugares de la página.
+- **Colecciones / Categorías destacadas** — Selección de categorías del catálogo para mostrar en la homepage con su imagen representativa.
+
+**Modelo de datos sugerido:**
+- `HomepageSection` — tipo (hero, featured, new_arrivals, promo, collections), título, orden, activo
+- `HomepageSlide` — imagen, título, subtítulo, cta_text, cta_link, orden, pertenece a una sección hero
+- `HomepageProductSpotlight` — relación many-to-many entre sección y productos del catálogo, con orden manual
+- `HomepageBanner` — imagen, título, descripción, link, posición, activo
+
+**Flujo:**
+1. El usuario selecciona una sección (ej: "Destacados").
+2. Busca y agrega productos desde el catálogo.
+3. Reordena arrastrando.
+4. Guarda. El frontend del sitio web consume esta configuración vía API para renderizar las secciones.
 
 ### 3.3 Multi-tenancy (Futuro)
 
@@ -150,13 +196,13 @@ Cada cliente recibe:
 
 ## 7. Próximos Pasos Inmediatos
 
-1. **Ajuste de paleta de colores** — Unificar modo oscuro a una paleta coherente (negro + gris neutro + acento único).
-2. **Schema Prisma: Business + Role + Permission** — Extender el modelo de datos.
-3. **Backend: módulo Auth con roles y permisos** — Guards y decoradores.
-4. **Frontend: gestión de usuarios** — CRUD de usuarios del equipo con asignación de roles.
-5. **Frontend: panel Admin** — Link en navbar, páginas de admin.
-6. **Sistema de invitaciones** — Generar links, aceptar invitaciones.
-7. **Módulos habilitados por negocio** — Filtrar sidebar y rutas según configuración.
+1. **Schema Prisma: Business + Role + Permission + Batch** — Extender el modelo de datos.
+2. **Backend: módulo Auth con roles y permisos** — Guards y decoradores.
+3. **Frontend: gestión de usuarios** — CRUD de usuarios del equipo con asignación de roles.
+4. **Frontend: panel Admin** — Link en navbar, páginas de admin.
+5. **Sistema de invitaciones** — Generar links, aceptar invitaciones.
+6. **Módulos habilitados por negocio** — Filtrar sidebar y rutas según configuración.
+7. **Backend: módulo Inventory con lotes** — CRUD de lotes, FIFO, alertas de stock.
 
 ---
 
