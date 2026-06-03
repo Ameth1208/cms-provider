@@ -10,6 +10,8 @@ interface AuthUser {
   organizationId: string
   organizationName: string
   permissions: { resource: string; action: string }[]
+  roles: string[]
+  modulesEnabled: string[]
 }
 
 interface AuthState {
@@ -33,21 +35,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
   const [state, setState] = useState<AuthState>({ token: null, user: null, isLoading: true })
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount + sync roles if missing
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (parsed.token && parsed.user) {
-          setState({ token: parsed.token, user: parsed.user, isLoading: false })
-          return
+    const init = async () => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY)
+        if (raw) {
+          const parsed = JSON.parse(raw)
+          if (parsed.token && parsed.user) {
+            const user = {
+              ...parsed.user,
+              roles: parsed.user.roles || [],
+              modulesEnabled: parsed.user.modulesEnabled || [],
+            }
+
+            // If roles missing (old token), fetch fresh profile
+            if (!user.roles.length) {
+              try {
+                const fresh = await fetch(`${API_URL}/auth/me`, {
+                  headers: { Authorization: `Bearer ${parsed.token}` },
+                }).then((r) => (r.ok ? r.json() : null))
+                if (fresh && fresh.roles) {
+                  user.roles = fresh.roles
+                  user.permissions = fresh.permissions
+                  user.modulesEnabled = fresh.modulesEnabled || []
+                  localStorage.setItem(STORAGE_KEY, JSON.stringify({ token: parsed.token, user }))
+                }
+              } catch {
+                // ignore fetch error, use localStorage data
+              }
+            }
+
+            setState({ token: parsed.token, user, isLoading: false })
+            return
+          }
         }
+      } catch {
+        localStorage.removeItem(STORAGE_KEY)
       }
-    } catch {
-      localStorage.removeItem(STORAGE_KEY)
+      setState((s) => ({ ...s, isLoading: false }))
     }
-    setState((s) => ({ ...s, isLoading: false }))
+
+    init()
   }, [])
 
   const login = useCallback(async (email: string, password: string) => {
@@ -73,6 +102,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           organizationId: data.user.organizationId,
           organizationName: data.user.organizationName,
           permissions: data.user.permissions,
+          roles: data.user.roles || [],
+          modulesEnabled: data.user.modulesEnabled || [],
         },
       }
 

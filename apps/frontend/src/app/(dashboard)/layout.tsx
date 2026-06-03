@@ -3,7 +3,8 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { AppSidebar } from './components/app-sidebar'
+import { AppSidebar } from '@/components/app-sidebar'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
@@ -19,8 +20,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
       <div className="min-h-dvh flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
-          <p className="text-sm text-muted-foreground font-light tracking-wide">Cargando...</p>
+          <Skeleton className="h-8 w-8 rounded-full" />
+          <Skeleton className="h-4 w-24" />
         </div>
       </div>
     )
