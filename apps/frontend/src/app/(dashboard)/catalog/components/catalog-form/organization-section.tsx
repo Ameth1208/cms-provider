@@ -142,14 +142,14 @@ interface TagInputProps {
 }
 
 const TAG_COLORS = [
-  'bg-blue-500/15 text-blue-700',
-  'bg-emerald-500/15 text-emerald-700',
-  'bg-amber-500/15 text-amber-700',
-  'bg-rose-500/15 text-rose-700',
-  'bg-violet-500/15 text-violet-700',
-  'bg-cyan-500/15 text-cyan-700',
-  'bg-orange-500/15 text-orange-700',
-  'bg-pink-500/15 text-pink-700',
+  'bg-zinc-500/15 text-zinc-700 dark:text-zinc-300',
+  'bg-stone-500/15 text-stone-700 dark:text-stone-300',
+  'bg-neutral-500/15 text-neutral-700 dark:text-neutral-300',
+  'bg-slate-500/15 text-slate-700 dark:text-slate-300',
+  'bg-orange-500/15 text-orange-700 dark:text-orange-300',
+  'bg-rose-500/15 text-rose-700 dark:text-rose-300',
+  'bg-violet-500/15 text-violet-700 dark:text-violet-300',
+  'bg-amber-500/15 text-amber-700 dark:text-amber-300',
 ]
 
 function getTagColor(name: string) {

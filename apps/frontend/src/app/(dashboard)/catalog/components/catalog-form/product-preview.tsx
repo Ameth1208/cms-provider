@@ -8,10 +8,10 @@ import { useCatalogFormStore } from '../../store/catalog-form-store'
 import { useTranslation } from '@/i18n/use-translation'
 
 const labelMap: Record<string, { labelKey: string; color: string }> = {
-  new: { labelKey: 'new_label', color: 'bg-blue-500' },
-  bestseller: { labelKey: 'bestseller_label', color: 'bg-amber-500' },
+  new: { labelKey: 'new_label', color: 'bg-zinc-500' },
+  bestseller: { labelKey: 'bestseller_label', color: 'bg-orange-500' },
   sale: { labelKey: 'sale_label', color: 'bg-red-500' },
-  limited: { labelKey: 'limited_label', color: 'bg-purple-500' },
+  limited: { labelKey: 'limited_label', color: 'bg-violet-500' },
 }
 
 export function ProductPreview() {
@@ -74,7 +74,7 @@ export function ProductPreview() {
             </span>
           )}
           {form.featured && (
-            <span className="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500 text-white">
+            <span className="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] font-medium bg-orange-500 text-white">
               {t('featured_product')}
             </span>
           )}
@@ -129,7 +129,7 @@ export function ProductPreview() {
               <p className="text-sm text-muted-foreground line-through">${form.comparePrice.toFixed(2)}</p>
             )}
             {discountLabel && (
-              <Badge className="bg-green-600 hover:bg-green-700 text-[10px]">{discountLabel}</Badge>
+              <Badge className="bg-primary text-primary-foreground text-[10px] hover:opacity-90">{discountLabel}</Badge>
             )}
           </div>
 

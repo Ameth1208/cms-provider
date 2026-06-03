@@ -167,7 +167,7 @@ export function VariantsSection() {
 
               {selectedColors.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Icon icon="lucide:check-circle" className="h-4 w-4 text-green-600" />
+                  <Icon icon="lucide:check-circle" className="h-4 w-4 text-emerald-500" />
                   {selectedColors.length} {selectedColors.length === 1 ? 'color' : 'colores'} seleccionado
                 </div>
               )}
@@ -196,7 +196,7 @@ export function VariantsSection() {
               </div>
               {selectedSizes.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Icon icon="lucide:check-circle" className="h-4 w-4 text-green-600" />
+                  <Icon icon="lucide:check-circle" className="h-4 w-4 text-emerald-500" />
                   {selectedSizes.length} {selectedSizes.length === 1 ? 'talla' : 'tallas'} seleccionada
                 </div>
               )}

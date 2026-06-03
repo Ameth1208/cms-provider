@@ -120,7 +120,7 @@ function CatalogCard({ item, onDelete }: { item: CatalogItem; onDelete: (id: str
         {/* Discount badge */}
         {hasDiscount && (
           <div className="absolute bottom-2 left-2">
-            <Badge className="bg-green-600 hover:bg-green-700 text-[10px]">
+            <Badge className="bg-primary text-primary-foreground text-[10px] hover:opacity-90">
               {item.discountType === 'PERCENTAGE'
                 ? `-${item.discountValue}%`
                 : `-$${item.discountValue}`}

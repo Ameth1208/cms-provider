@@ -245,7 +245,7 @@ export function BasicInfoSection({ isNew }: Props) {
                   </span>
                 )}
                 {discountLabel && (
-                  <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+                  <Badge variant="default" className="bg-primary text-primary-foreground hover:opacity-90">
                     {discountLabel}
                   </Badge>
                 )}

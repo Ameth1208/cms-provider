@@ -9,10 +9,10 @@ import { Separator } from '@/components/ui/separator'
 import { useTranslation } from '@/i18n/use-translation'
 
 const labels = [
-  { value: 'new', labelKey: 'new_label', color: 'bg-blue-500' },
-  { value: 'bestseller', labelKey: 'bestseller_label', color: 'bg-amber-500' },
+  { value: 'new', labelKey: 'new_label', color: 'bg-zinc-500' },
+  { value: 'bestseller', labelKey: 'bestseller_label', color: 'bg-orange-500' },
   { value: 'sale', labelKey: 'sale_label', color: 'bg-red-500' },
-  { value: 'limited', labelKey: 'limited_label', color: 'bg-purple-500' },
+  { value: 'limited', labelKey: 'limited_label', color: 'bg-violet-500' },
 ]
 
 export function SeoVisibilitySection() {
@@ -154,7 +154,7 @@ export function SeoVisibilitySection() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="metaDescription">{t('meta_description')}</Label>
-              <span className={`text-[10px] ${isGoodLength ? 'text-green-600' : 'text-muted-foreground'}`}>
+              <span className={`text-[10px] ${isGoodLength ? 'text-emerald-500' : 'text-muted-foreground'}`}>
                 {charCount}/160
               </span>
             </div>
@@ -173,10 +173,10 @@ export function SeoVisibilitySection() {
               {t('google_preview')}
             </p>
             <div className="space-y-1">
-              <p className="text-sm text-blue-600 truncate">
+              <p className="text-sm text-primary truncate">
                 {(form.metaTitle || form.name || 'Título') + ' | Tu Tienda'}
               </p>
-              <p className="text-xs text-green-700">
+              <p className="text-xs text-emerald-500">
                 tudominio.com/catalog/{form.slug || 'producto'}
               </p>
               <p className="text-xs text-muted-foreground line-clamp-2">

@@ -43,7 +43,7 @@ export default function CampaignsPage() {
                 {camp.autoApply && ' · Auto-aplicable'}
               </p>
               {camp.discounts.map((d) => (
-                <span key={d.id} className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full mr-1">
+                <span key={d.id} className="text-xs px-2 py-0.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 rounded-full mr-1">
                   {d.type === 'PERCENTAGE' ? `${d.value}%` : `$${d.value}`}
                   {d.code && ` (${d.code})`}
                 </span>
@@ -51,7 +51,7 @@ export default function CampaignsPage() {
             </div>
             <button
               onClick={() => toggleActive(camp.id)}
-              className={`px-3 py-1 rounded-lg text-xs font-medium ${camp.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
+              className={`px-3 py-1 rounded-lg text-xs font-medium ${camp.active ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/15 text-red-600 dark:text-red-400'}`}
             >
               {camp.active ? 'Activa' : 'Inactiva'}
             </button>

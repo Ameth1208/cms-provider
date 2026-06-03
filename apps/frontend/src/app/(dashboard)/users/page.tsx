@@ -40,7 +40,7 @@ export default function UsersPage() {
                   ))}
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${user.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${user.active ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-red-500/15 text-red-600 dark:text-red-400'}`}>
                     {user.active ? 'Activo' : 'Inactivo'}
                   </span>
                 </td>
