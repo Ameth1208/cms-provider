@@ -1,13 +1,12 @@
 'use client'
 
 import { useCallback } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/auth-context'
 import { api } from '@/lib/api-client'
 import { useApiKeysStore, type ApiKeyRecord } from '../store/api-keys-store'
 
 export function useApiKeys() {
-  const { data: session } = useSession()
-  const token = (session?.user as any)?.accessToken as string | undefined
+  const { token } = useAuth()
 
   const {
     keys, loading, selected,

@@ -14,6 +14,7 @@ function decodeJwt(token: string): { exp?: number } | null {
 }
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET || 'cms-web-manager-default-secret-key-for-dev-only-change-in-production',
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -22,32 +23,37 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null
+        try {
+          if (!credentials?.email || !credentials?.password) return null
 
-        const res = await fetch(`${API_URL}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: credentials.email,
-            password: credentials.password,
-          }),
-        })
+          const res = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          })
 
-        if (!res.ok) return null
+          if (!res.ok) return null
 
-        const data = await res.json()
-        const decoded = decodeJwt(data.accessToken)
+          const data = await res.json()
+          const decoded = decodeJwt(data.accessToken)
 
-        return {
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.name,
-          accessToken: data.accessToken,
-          accessTokenExpires: decoded?.exp ? decoded.exp * 1000 : Date.now() + 24 * 60 * 60 * 1000,
-          refreshToken: data.refreshToken,
-          organizationId: data.user.organizationId,
-          organizationName: data.user.organizationName,
-          permissions: data.user.permissions,
+          return {
+            id: data.user.id,
+            email: data.user.email,
+            name: data.user.name,
+            accessToken: data.accessToken,
+            accessTokenExpires: decoded?.exp ? decoded.exp * 1000 : Date.now() + 24 * 60 * 60 * 1000,
+            refreshToken: data.refreshToken,
+            organizationId: data.user.organizationId,
+            organizationName: data.user.organizationName,
+            permissions: data.user.permissions,
+          }
+        } catch (e) {
+          console.error('[NextAuth] authorize error:', e)
+          return null
         }
       },
     }),

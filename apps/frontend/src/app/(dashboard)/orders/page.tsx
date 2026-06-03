@@ -1,15 +1,14 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/auth-context'
 import { api } from '@/lib/api-client'
 import { useOrdersStore } from './store/orders-store'
 import { getSocket } from '@/lib/socket'
 
 export default function OrdersPage() {
-  const { data: session } = useSession()
-  const token = (session?.user as any)?.accessToken
-  const orgId = (session?.user as any)?.organizationId
+  const { token, user } = useAuth()
+  const orgId = user?.organizationId
   const { orders, setOrders, addOrder, updateOrderStatus } = useOrdersStore()
 
   useEffect(() => {

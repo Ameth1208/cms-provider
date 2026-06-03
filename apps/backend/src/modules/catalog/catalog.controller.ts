@@ -40,8 +40,15 @@ export class CatalogController {
   @Post()
   @RequirePermission('catalog', 'create')
   create(@Body() body: {
-    name: string; slug: string; description?: string; price: number
-    type: 'PRODUCT' | 'SERVICE'; sku?: string; categoryId?: string; tagIds?: string[]
+    name: string; slug: string; description?: string; price: number; comparePrice?: number
+    discountType?: 'PERCENTAGE' | 'FIXED'; discountValue?: number
+    type: 'PRODUCT' | 'SERVICE'; sku?: string; barcode?: string
+    active?: boolean; visibility?: string; featured?: boolean; label?: string
+    categoryId?: string; tagIds?: string[]
+    brand?: string; material?: string; gender?: string; season?: string; fit?: string
+    weight?: number; dimensions?: string; country?: string; careInstructions?: string
+    metaTitle?: string; metaDescription?: string
+    variants?: { name: string; sku?: string; color?: string; colorHex?: string; size?: string; price?: number; stock?: number; active?: boolean }[]
   }, @CurrentUser('organizationId') orgId: string) {
     return this.catalog.create(body, orgId)
   }

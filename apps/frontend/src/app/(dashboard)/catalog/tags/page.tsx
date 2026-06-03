@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/auth-context'
 import { Icon } from '@iconify/react'
 import { api } from '@/lib/api-client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,8 +19,7 @@ interface TagWithCount {
 }
 
 export default function TagsPage() {
-  const { data: session } = useSession()
-  const token = (session?.user as any)?.accessToken
+  const { token } = useAuth()
   const [tags, setTags] = useState<TagWithCount[]>([])
   const [loading, setLoading] = useState(true)
   const [name, setName] = useState('')

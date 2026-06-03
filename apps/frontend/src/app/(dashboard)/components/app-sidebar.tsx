@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useSession, signOut } from 'next-auth/react'
+import { useAuth } from '@/lib/auth-context'
 import { Icon } from '@iconify/react'
 import { useTheme } from 'next-themes'
 import { useLocaleStore } from '@/store'
@@ -78,7 +78,7 @@ function SidebarTooltip({ label, children }: { label: string; children: React.Re
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const { data: session } = useSession()
+  const { user, logout } = useAuth()
   const { theme, setTheme } = useTheme()
   const { locale, setLocale } = useLocaleStore()
   const { t } = useTranslation()
@@ -86,7 +86,6 @@ export function AppSidebar() {
 
   const [openCatalog, setOpenCatalog] = useState(true)
 
-  const user = session?.user as any
   const initials = user?.email?.charAt(0).toUpperCase() || 'U'
 
   const navItems: NavItem[] = [
@@ -317,7 +316,7 @@ export function AppSidebar() {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="rounded-lg text-[13px] font-normal text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/5"
-                onClick={() => signOut()}
+                onClick={() => logout()}
               >
                 <Icon icon="lucide:log-out" className="mr-2 h-4 w-4 opacity-60" />
                 {t('logout')}

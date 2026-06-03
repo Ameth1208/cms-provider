@@ -1,12 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/auth-context'
 import { api } from '@/lib/api-client'
 
 export default function InventoryPage() {
-  const { data: session } = useSession()
-  const token = (session?.user as any)?.accessToken
+  const { token } = useAuth()
   const [inventory, setInventory] = useState<any[]>([])
   const [lowStock, setLowStock] = useState<any[]>([])
 

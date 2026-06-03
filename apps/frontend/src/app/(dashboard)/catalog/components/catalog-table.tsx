@@ -96,7 +96,24 @@ export function CatalogTable({ items, onDelete }: Props) {
                 </td>
 
                 {/* Price */}
-                <td className="px-4 py-3 font-light">${item.price.toFixed(2)}</td>
+                <td className="px-4 py-3">
+                  {item.discountType && item.discountValue > 0 ? (
+                    <div className="flex flex-col">
+                      <span className="font-medium">
+                        ${(
+                          item.discountType === 'PERCENTAGE'
+                            ? Math.round(item.price * (1 - item.discountValue / 100) * 100) / 100
+                            : Math.max(0, item.price - item.discountValue)
+                        ).toFixed(2)}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground line-through">
+                        ${item.price.toFixed(2)}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="font-light">${item.price.toFixed(2)}</span>
+                  )}
+                </td>
 
                 {/* SKU */}
                 <td className="px-4 py-3 text-muted-foreground font-light text-xs">{item.sku || '—'}</td>

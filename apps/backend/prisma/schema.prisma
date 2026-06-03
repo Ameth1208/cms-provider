@@ -38,10 +38,15 @@ enum DiscountType {
   FIXED
 }
 
+enum CatalogItemDiscountType {
+  PERCENTAGE
+  FIXED
+}
+
 // ─── Multi-tenant ───
 
 model Organization {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   name      String
   slug      String   @unique
   logoUrl   String?
@@ -56,12 +61,13 @@ model Organization {
   campaigns      Campaign[]
   systemSettings SystemSetting[]
   apiKeys        ApiKey[]
+  reviews        Review[]
 }
 
 // ─── Auth & Users ───
 
 model User {
-  id             String   @id @default(cuid())
+  id             String   @id @default(uuid())
   email          String   @unique
   password       String
   name           String?
@@ -89,7 +95,7 @@ model UserRole {
 // ─── Roles & Permissions ───
 
 model Role {
-  id             String  @id @default(cuid())
+  id             String  @id @default(uuid())
   name           String
   description    String?
   organizationId String
@@ -103,7 +109,7 @@ model Role {
 }
 
 model Permission {
-  id       String @id @default(cuid())
+  id       String @id @default(uuid())
   resource String
   action   String
   name     String
@@ -126,32 +132,74 @@ model RolePermission {
 // ─── Catalog ───
 
 model CatalogItem {
-  id             String          @id @default(cuid())
-  name           String
-  slug           String
-  description    String?
-  price          Float
-  type           CatalogItemType
-  sku            String?
-  active         Boolean         @default(true)
-  organizationId String
-  categoryId     String?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id               String          @id @default(uuid())
+  name             String
+  slug             String
+  description      String?
+  price            Float
+  comparePrice     Float?
+  discountType     CatalogItemDiscountType?
+  discountValue    Float                  @default(0)
+  type             CatalogItemType
+  sku              String?
+  barcode          String?
+  active           Boolean         @default(true)
+  visibility       String          @default("visible")
+  featured         Boolean         @default(false)
+  label            String?
+  organizationId   String
+  categoryId       String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
-  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  category     Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  tags         CatalogItemTag[]
-  media        Media[]
-  inventory    Inventory?
+  // Detalles del producto
+  brand            String?
+  material         String?
+  gender           String?
+  season           String?
+  fit              String?
+  weight           Float?
+  dimensions       String?
+  country          String?
+  careInstructions String?
+
+  // SEO
+  metaTitle        String?
+  metaDescription  String?
+
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category       Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags           CatalogItemTag[]
+  media          Media[]
+  inventory      Inventory?
+  reviews        Review[]
+  variants       CatalogItemVariant[]
 
   @@unique([slug, organizationId])
   @@index([organizationId])
   @@index([categoryId])
 }
 
+model CatalogItemVariant {
+  id            String   @id @default(uuid())
+  catalogItemId String
+  name          String
+  sku           String?
+  color         String?
+  colorHex      String?
+  size          String?
+  price         Float?
+  stock         Int      @default(0)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  catalogItem CatalogItem @relation(fields: [catalogItemId], references: [id], onDelete: Cascade)
+
+  @@index([catalogItemId])
+}
+
 model Tag {
-  id             String @id @default(cuid())
+  id             String @id @default(uuid())
   name           String
   slug           String
   organizationId String
@@ -160,6 +208,23 @@ model Tag {
   catalogItems CatalogItemTag[]
 
   @@unique([slug, organizationId])
+  @@index([organizationId])
+}
+
+model Review {
+  id             String   @id @default(uuid())
+  catalogItemId  String
+  userName       String
+  userEmail      String?
+  rating         Int      @default(5)
+  comment        String
+  createdAt      DateTime @default(now())
+  organizationId String
+
+  catalogItem  CatalogItem  @relation(fields: [catalogItemId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([catalogItemId])
   @@index([organizationId])
 }
 
@@ -174,7 +239,7 @@ model CatalogItemTag {
 }
 
 model Category {
-  id             String  @id @default(cuid())
+  id             String  @id @default(uuid())
   name           String
   slug           String
   parentId       String?
@@ -193,7 +258,7 @@ model Category {
 // ─── Media ───
 
 model Media {
-  id            String    @id @default(cuid())
+  id            String    @id @default(uuid())
   url           String
   type          MediaType
   alt           String?
@@ -209,7 +274,7 @@ model Media {
 // ─── Orders ───
 
 model Order {
-  id             String      @id @default(cuid())
+  id             String      @id @default(uuid())
   status         OrderStatus @default(PENDING)
   subtotal       Float
   discount       Float       @default(0)
@@ -231,7 +296,7 @@ model Order {
 }
 
 model OrderItem {
-  id              String @id @default(cuid())
+  id              String @id @default(uuid())
   orderId         String
   catalogItemId   String
   catalogItemName String
@@ -247,7 +312,7 @@ model OrderItem {
 // ─── Inventory ───
 
 model Inventory {
-  id                String @id @default(cuid())
+  id                String @id @default(uuid())
   catalogItemId     String @unique
   quantity          Int    @default(0)
   lowStockThreshold Int    @default(5)
@@ -257,7 +322,7 @@ model Inventory {
 }
 
 model StockMovement {
-  id          String       @id @default(cuid())
+  id          String       @id @default(uuid())
   inventoryId String
   type        MovementType
   quantity    Int
@@ -273,7 +338,7 @@ model StockMovement {
 // ─── Campaigns & Discounts ───
 
 model Campaign {
-  id             String   @id @default(cuid())
+  id             String   @id @default(uuid())
   name           String
   description    String?
   startDate      DateTime
@@ -290,7 +355,7 @@ model Campaign {
 }
 
 model Discount {
-  id         String       @id @default(cuid())
+  id         String       @id @default(uuid())
   type       DiscountType
   value      Float
   code       String?
@@ -307,7 +372,7 @@ model Discount {
 // ─── Company Settings ───
 
 model SystemSetting {
-  id             String @id @default(cuid())
+  id             String @id @default(uuid())
   key            String
   value          String
   organizationId String
@@ -319,7 +384,7 @@ model SystemSetting {
 }
 
 model ApiKey {
-  id             String   @id @default(cuid())
+  id             String   @id @default(uuid())
   name           String
   keyHash        String   @unique
   keyPrefix      String

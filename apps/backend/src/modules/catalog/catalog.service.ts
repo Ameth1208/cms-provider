@@ -7,6 +7,7 @@ type CatalogPrismaInclude = {
   media: { orderBy: { order: 'asc' } }
   category: true
   inventory?: true
+  variants?: true
 }
 
 const baseInclude: CatalogPrismaInclude = {
@@ -18,12 +19,15 @@ const baseInclude: CatalogPrismaInclude = {
 const includeWithInventory: CatalogPrismaInclude = {
   ...baseInclude,
   inventory: true,
+  variants: true,
 }
 
 function buildSeoMetadata(item: {
   name: string
   slug: string
   description?: string | null
+  metaTitle?: string | null
+  metaDescription?: string | null
   tags?: { tag: { name: string } }[]
   media?: { url: string }[]
   category?: { name: string } | null
@@ -36,14 +40,16 @@ function buildSeoMetadata(item: {
   canonical: string
 } {
   const tagNames = item.tags?.map((t) => t.tag.name) ?? []
-  const desc = item.description
-    ? item.description.length > 160
-      ? item.description.slice(0, 157) + '...'
-      : item.description
-    : `${item.name} - ${tagNames.length ? tagNames.join(', ') : 'catálogo'}`
+  const desc = item.metaDescription
+    ? item.metaDescription
+    : item.description
+      ? item.description.length > 160
+        ? item.description.slice(0, 157) + '...'
+        : item.description
+      : `${item.name} - ${tagNames.length ? tagNames.join(', ') : 'catálogo'}`
 
   return {
-    title: `${item.name} | CMS Web Manager`,
+    title: item.metaTitle || `${item.name} | CMS Web Manager`,
     description: desc,
     keywords: [...tagNames, item.category?.name].filter(Boolean) as string[],
     ogImage: item.media?.[0]?.url ?? null,
@@ -64,6 +70,7 @@ export class CatalogService {
         { name: { contains: query.search, mode: 'insensitive' } },
         { description: { contains: query.search, mode: 'insensitive' } },
         { sku: { contains: query.search, mode: 'insensitive' } },
+        { brand: { contains: query.search, mode: 'insensitive' } },
       ]
     }
 
@@ -77,13 +84,21 @@ export class CatalogService {
       orderBy: { createdAt: 'desc' },
     })
 
-    return items.map((item) => ({ ...item, seo: buildSeoMetadata(item) })) as unknown as CatalogItemWithSeo[]
+    return items.map((item) => ({ ...item, finalPrice: this.calculateFinalPrice(item), seo: buildSeoMetadata(item) })) as unknown as CatalogItemWithSeo[]
+  }
+
+  private calculateFinalPrice(item: any): number {
+    if (!item.discountType || item.discountValue <= 0) return item.price
+    if (item.discountType === 'PERCENTAGE') {
+      return Math.round(item.price * (1 - item.discountValue / 100) * 100) / 100
+    }
+    return Math.max(0, Math.round((item.price - item.discountValue) * 100) / 100)
   }
 
   async findBySlug(slug: string, organizationId: string): Promise<CatalogItemWithSeo> {
     const item = await this.prisma.catalogItem.findFirst({
       where: { slug, organizationId },
-      include: { ...baseInclude },
+      include: { ...baseInclude, variants: true },
     })
     if (!item) throw new NotFoundException('Item not found')
     return { ...item, seo: buildSeoMetadata(item) } as unknown as CatalogItemWithSeo
@@ -103,10 +118,30 @@ export class CatalogService {
     slug: string
     description?: string
     price: number
+    comparePrice?: number
+    discountType?: 'PERCENTAGE' | 'FIXED'
+    discountValue?: number
     type: 'PRODUCT' | 'SERVICE'
     sku?: string
+    barcode?: string
+    active?: boolean
+    visibility?: string
+    featured?: boolean
+    label?: string
     categoryId?: string
     tagIds?: string[]
+    brand?: string
+    material?: string
+    gender?: string
+    season?: string
+    fit?: string
+    weight?: number
+    dimensions?: string
+    country?: string
+    careInstructions?: string
+    metaTitle?: string
+    metaDescription?: string
+    variants?: { name: string; sku?: string; color?: string; colorHex?: string; size?: string; price?: number; stock?: number; active?: boolean }[]
   }, organizationId: string): Promise<CatalogItemWithSeo> {
     const existing = await this.prisma.catalogItem.findFirst({
       where: { slug: data.slug, organizationId },
@@ -119,21 +154,43 @@ export class CatalogService {
         slug: data.slug,
         description: data.description,
         price: data.price,
+        comparePrice: data.comparePrice,
+        discountType: data.discountType || null,
+        discountValue: data.discountType ? (data.discountValue ?? 0) : 0,
         type: data.type,
         sku: data.sku,
+        barcode: data.barcode,
+        active: data.active ?? true,
+        visibility: data.visibility ?? 'visible',
+        featured: data.featured ?? false,
+        label: data.label,
         categoryId: data.categoryId,
         organizationId,
+        brand: data.brand,
+        material: data.material,
+        gender: data.gender,
+        season: data.season,
+        fit: data.fit,
+        weight: data.weight,
+        dimensions: data.dimensions,
+        country: data.country,
+        careInstructions: data.careInstructions,
+        metaTitle: data.metaTitle,
+        metaDescription: data.metaDescription,
         tags: data.tagIds?.length
           ? { create: data.tagIds.map((tagId) => ({ tagId })) }
           : undefined,
-        inventory: {
-          create: { quantity: 0, lowStockThreshold: 5 },
-        },
+        inventory: data.type === 'PRODUCT'
+          ? { create: { quantity: 0, lowStockThreshold: 5 } }
+          : undefined,
+        variants: data.variants?.length
+          ? { create: data.variants }
+          : undefined,
       },
       include: { ...includeWithInventory },
     })
 
-    return { ...item, seo: buildSeoMetadata(item) } as unknown as CatalogItemWithSeo
+    return { ...item, finalPrice: this.calculateFinalPrice(item), seo: buildSeoMetadata(item) } as unknown as CatalogItemWithSeo
   }
 
   async update(id: string, data: {
@@ -141,11 +198,30 @@ export class CatalogService {
     slug?: string
     description?: string
     price?: number
+    comparePrice?: number
+    discountType?: 'PERCENTAGE' | 'FIXED' | null
+    discountValue?: number
     type?: 'PRODUCT' | 'SERVICE'
     sku?: string
+    barcode?: string
     active?: boolean
+    visibility?: string
+    featured?: boolean
+    label?: string
     categoryId?: string | null
     tagIds?: string[]
+    brand?: string
+    material?: string
+    gender?: string
+    season?: string
+    fit?: string
+    weight?: number
+    dimensions?: string
+    country?: string
+    careInstructions?: string
+    metaTitle?: string
+    metaDescription?: string
+    variants?: { id?: string; name: string; sku?: string; color?: string; colorHex?: string; size?: string; price?: number; stock?: number; active?: boolean }[]
   }, organizationId: string): Promise<CatalogItemWithSeo> {
     const item = await this.prisma.catalogItem.findFirst({ where: { id, organizationId } })
     if (!item) throw new NotFoundException('Item not found')
@@ -164,6 +240,19 @@ export class CatalogService {
       })
     }
 
+    // Update variants: replace all
+    if (data.variants !== undefined) {
+      await this.prisma.catalogItemVariant.deleteMany({ where: { catalogItemId: id } })
+      if (data.variants.length > 0) {
+        await this.prisma.catalogItemVariant.createMany({
+          data: data.variants.map((v) => {
+            const { id: _id, ...rest } = v
+            return { ...rest, catalogItemId: id }
+          }),
+        })
+      }
+    }
+
     const updated = await this.prisma.catalogItem.update({
       where: { id },
       data: {
@@ -171,21 +260,40 @@ export class CatalogService {
         slug: data.slug,
         description: data.description,
         price: data.price,
+        comparePrice: data.comparePrice,
+        discountType: data.discountType || null,
+        discountValue: data.discountType ? (data.discountValue ?? 0) : 0,
         type: data.type,
         sku: data.sku,
+        barcode: data.barcode,
         active: data.active,
+        visibility: data.visibility,
+        featured: data.featured,
+        label: data.label,
         categoryId: data.categoryId,
+        brand: data.brand,
+        material: data.material,
+        gender: data.gender,
+        season: data.season,
+        fit: data.fit,
+        weight: data.weight,
+        dimensions: data.dimensions,
+        country: data.country,
+        careInstructions: data.careInstructions,
+        metaTitle: data.metaTitle,
+        metaDescription: data.metaDescription,
       },
       include: { ...includeWithInventory },
     })
 
-    return { ...updated, seo: buildSeoMetadata(updated) } as unknown as CatalogItemWithSeo
+    return { ...updated, finalPrice: this.calculateFinalPrice(updated), seo: buildSeoMetadata(updated) } as unknown as CatalogItemWithSeo
   }
 
   async remove(id: string, organizationId: string) {
     const item = await this.prisma.catalogItem.findFirst({ where: { id, organizationId } })
     if (!item) throw new NotFoundException('Item not found')
 
+    await this.prisma.catalogItemVariant.deleteMany({ where: { catalogItemId: id } })
     await this.prisma.catalogItemTag.deleteMany({ where: { catalogItemId: id } })
     await this.prisma.media.deleteMany({ where: { catalogItemId: id } })
     await this.prisma.inventory.deleteMany({ where: { catalogItemId: id } })

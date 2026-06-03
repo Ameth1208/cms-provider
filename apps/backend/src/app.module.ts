@@ -11,6 +11,7 @@ import { InventoryModule } from './modules/inventory/inventory.module'
 import { CampaignsModule } from './modules/campaigns/campaigns.module'
 import { CompanySettingsModule } from './modules/company-settings/company-settings.module'
 import { ApiKeysModule } from './modules/api-keys/api-keys.module'
+import { ReviewsModule } from './modules/reviews/reviews.module'
 import { StorageModule } from './common/storage/storage.module'
 
 @Module({
@@ -31,6 +32,7 @@ import { StorageModule } from './common/storage/storage.module'
     CampaignsModule,
     CompanySettingsModule,
     ApiKeysModule,
+    ReviewsModule,
   ],
 })
 export class AppModule {}

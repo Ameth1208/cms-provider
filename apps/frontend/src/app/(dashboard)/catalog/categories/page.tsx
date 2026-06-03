@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/auth-context'
 import { Icon } from '@iconify/react'
 import { api } from '@/lib/api-client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -12,8 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import type { Category } from '@cms/shared'
 
 export default function CategoriesPage() {
-  const { data: session } = useSession()
-  const token = (session?.user as any)?.accessToken
+  const { token } = useAuth()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [name, setName] = useState('')

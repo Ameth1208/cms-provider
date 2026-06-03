@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/auth-context'
 import { api } from '@/lib/api-client'
 import type { Campaign } from '@cms/shared'
 
 export default function CampaignsPage() {
-  const { data: session } = useSession()
-  const token = (session?.user as any)?.accessToken
+  const { token } = useAuth()
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
 
   useEffect(() => {

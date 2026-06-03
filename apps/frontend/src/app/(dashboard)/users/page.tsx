@@ -1,12 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/auth-context'
 import { api } from '@/lib/api-client'
 
 export default function UsersPage() {
-  const { data: session } = useSession()
-  const token = (session?.user as any)?.accessToken
+  const { token } = useAuth()
   const [users, setUsers] = useState<any[]>([])
 
   useEffect(() => {

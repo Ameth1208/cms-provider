@@ -54,6 +54,46 @@ export class MediaService {
     })
   }
 
+  async uploadBatch(
+    files: UploadedFile[],
+    catalogItemId: string,
+  ) {
+    if (!files || files.length === 0) {
+      throw new BadRequestException('No files provided')
+    }
+
+    const maxOrder = await this.prisma.media.aggregate({
+      where: { catalogItemId },
+      _max: { order: true },
+    })
+
+    let currentOrder = (maxOrder._max.order ?? -1) + 1
+    const results = []
+
+    for (const file of files) {
+      const ext = file.originalname.split('.').pop()
+      const filename = `${uuid()}.${ext}`
+      const url = await this.storage.upload(filename, file.buffer, {
+        contentType: file.mimetype,
+      })
+
+      const mediaType = this.getMediaType(file.mimetype)
+
+      const media = await this.prisma.media.create({
+        data: {
+          url,
+          type: mediaType,
+          alt: file.originalname,
+          order: currentOrder++,
+          catalogItemId,
+        },
+      })
+      results.push(media)
+    }
+
+    return results
+  }
+
   async delete(id: string) {
     const media = await this.prisma.media.findUnique({ where: { id } })
     if (!media) throw new BadRequestException('Media not found')

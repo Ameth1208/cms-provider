@@ -1,23 +1,22 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/auth-context'
 import { useEffect, useState } from 'react'
 import { Icon } from '@iconify/react'
 import { api } from '@/lib/api-client'
 import { Card, CardContent } from '@/components/ui/card'
 
 export default function DashboardPage() {
-  const { data: session } = useSession()
+  const { token } = useAuth()
   const [stats, setStats] = useState<any>(null)
 
   useEffect(() => {
-    const token = (session?.user as any)?.accessToken
     if (!token) return
 
     api.get('/orders/stats', token)
       .then(setStats)
       .catch(() => {})
-  }, [session])
+  }, [token])
 
   const cards = [
     { label: 'Total Pedidos', value: stats?.totalOrders ?? '—', icon: 'lucide:shopping-cart' },

@@ -1,5 +1,5 @@
-import { Controller, Post, Delete, Param, Body, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common'
-import { FileInterceptor } from '@nestjs/platform-express'
+import { Controller, Post, Delete, Param, Body, UseGuards, UseInterceptors, UploadedFile, UploadedFiles } from '@nestjs/common'
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express'
 import { ApiTags, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger'
 import { MediaService } from './media.service'
 import { HybridAuthGuard } from '../../common/guards/hybrid-auth.guard'
@@ -23,6 +23,17 @@ export class MediaController {
     @Body('order') order?: number,
   ) {
     return this.media.upload(file, catalogItemId, order)
+  }
+
+  @Post('upload-batch/:catalogItemId')
+  @RequirePermission('media', 'create')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor('files', 10))
+  uploadBatch(
+    @UploadedFiles() files: any[],
+    @Param('catalogItemId') catalogItemId: string,
+  ) {
+    return this.media.uploadBatch(files || [], catalogItemId)
   }
 
   @Delete(':id')

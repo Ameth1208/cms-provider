@@ -24,7 +24,7 @@ async function bootstrap() {
       if (isLocalhost(origin)) return callback(null, true)
       callback(new Error(`CORS blocked: ${origin}`))
     },
-    credentials: true,
+    credentials: false,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
   })

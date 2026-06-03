@@ -1,13 +1,12 @@
 'use client'
 
 import { useCallback } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/auth-context'
 import { api } from '@/lib/api-client'
 import { useCatalogStore } from '../store/catalog-store'
 
 export function useCatalog() {
-  const { data: session } = useSession()
-  const token = (session?.user as any)?.accessToken
+  const { token } = useAuth()
   const { items, loading, setItems, setLoading, addItem, updateItem, removeItem } = useCatalogStore()
 
   const fetchItems = useCallback(async (params?: Record<string, string>) => {
