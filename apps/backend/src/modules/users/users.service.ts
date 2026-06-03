@@ -14,6 +14,7 @@ export class UsersService {
         email: true,
         name: true,
         active: true,
+        modulesEnabled: true,
         createdAt: true,
         roles: {
           include: { role: { select: { id: true, name: true } } },
@@ -30,6 +31,7 @@ export class UsersService {
         email: true,
         name: true,
         active: true,
+        modulesEnabled: true,
         createdAt: true,
         roles: {
           include: { role: { include: { permissions: { include: { permission: true } } } } },
@@ -40,7 +42,7 @@ export class UsersService {
     return user
   }
 
-  async create(data: { email: string; password: string; name?: string; roleIds: string[] }, organizationId: string) {
+  async create(data: { email: string; password: string; name?: string; roleIds: string[]; modulesEnabled?: string[] }, organizationId: string) {
     const hashed = await bcrypt.hash(data.password, 12)
     const user = await this.prisma.user.create({
       data: {
@@ -48,6 +50,7 @@ export class UsersService {
         password: hashed,
         name: data.name,
         organizationId,
+        modulesEnabled: data.modulesEnabled ?? [],
         roles: {
           create: data.roleIds.map((roleId) => ({ roleId })),
         },
@@ -66,7 +69,7 @@ export class UsersService {
     return { id: user.id, email: user.email, name: user.name }
   }
 
-  async update(id: string, data: { name?: string; active?: boolean; roleIds?: string[] }, organizationId: string) {
+  async update(id: string, data: { name?: string; active?: boolean; roleIds?: string[]; modulesEnabled?: string[] }, organizationId: string) {
     const user = await this.prisma.user.findFirst({ where: { id, organizationId } })
     if (!user) throw new NotFoundException('User not found')
 
@@ -82,8 +85,9 @@ export class UsersService {
       data: {
         name: data.name,
         active: data.active,
+        modulesEnabled: data.modulesEnabled,
       },
-      select: { id: true, email: true, name: true, active: true },
+      select: { id: true, email: true, name: true, active: true, modulesEnabled: true },
     })
   }
 

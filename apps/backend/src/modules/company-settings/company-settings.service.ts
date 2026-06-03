@@ -50,4 +50,27 @@ export class CompanySettingsService {
 
     return this.getSettings(organizationId)
   }
+
+  async getModules(organizationId: string) {
+    const org = await this.prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { modulesEnabled: true },
+    })
+    return { modules: org?.modulesEnabled ?? [] }
+  }
+
+  async updateModules(organizationId: string, modules: string[]) {
+    const validModules = [
+      'catalog', 'inventory', 'orders', 'campaigns',
+      'content', 'users', 'apiKeys', 'reviews', 'settings',
+    ]
+    const filtered = modules.filter((m) => validModules.includes(m))
+
+    await this.prisma.organization.update({
+      where: { id: organizationId },
+      data: { modulesEnabled: filtered },
+    })
+
+    return { modules: filtered }
+  }
 }

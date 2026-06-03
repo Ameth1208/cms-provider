@@ -27,13 +27,13 @@ export class UsersController {
 
   @Post()
   @RequirePermission('users', 'create')
-  create(@Body() body: { email: string; password: string; name?: string; roleIds: string[] }, @CurrentUser('organizationId') orgId: string) {
+  create(@Body() body: { email: string; password: string; name?: string; roleIds: string[]; modulesEnabled?: string[] }, @CurrentUser('organizationId') orgId: string) {
     return this.users.create(body, orgId)
   }
 
   @Put(':id')
   @RequirePermission('users', 'update')
-  update(@Param('id') id: string, @Body() body: { name?: string; active?: boolean; roleIds?: string[] }, @CurrentUser('organizationId') orgId: string) {
+  update(@Param('id') id: string, @Body() body: { name?: string; active?: boolean; roleIds?: string[]; modulesEnabled?: string[] }, @CurrentUser('organizationId') orgId: string) {
     return this.users.update(id, body, orgId)
   }
 

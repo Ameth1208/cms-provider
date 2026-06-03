@@ -24,4 +24,16 @@ export class CompanySettingsController {
   updateSettings(@Body() body: any, @CurrentUser('organizationId') orgId: string) {
     return this.settings.updateSettings(orgId, body)
   }
+
+  @Get('modules')
+  @RequirePermission('settings', 'read')
+  getModules(@CurrentUser('organizationId') orgId: string) {
+    return this.settings.getModules(orgId)
+  }
+
+  @Put('modules')
+  @RequirePermission('settings', 'manage')
+  updateModules(@Body() body: { modules: string[] }, @CurrentUser('organizationId') orgId: string) {
+    return this.settings.updateModules(orgId, body.modules)
+  }
 }
