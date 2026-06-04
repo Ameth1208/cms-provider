@@ -5,9 +5,12 @@ import { useEffect, useState } from 'react'
 import { Icon } from '@iconify/react'
 import { api } from '@/lib/api-client'
 import { Card, CardContent } from '@/components/ui/card'
+import { PageHeader } from '@/components/page-header'
+import { useTranslation } from '@/i18n/use-translation'
 
 export default function DashboardPage() {
   const { token } = useAuth()
+  const { t } = useTranslation()
   const [stats, setStats] = useState<any>(null)
 
   useEffect(() => {
@@ -26,14 +29,10 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-10">
-      <div>
-        <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase mb-3">
-          Panel principal
-        </p>
-        <h1 className="text-3xl sm:text-4xl font-light text-foreground tracking-tight">
-          Resumen del negocio
-        </h1>
-      </div>
+      <PageHeader
+        title={t('dashboard')}
+        description={t('dashboard_desc')}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {cards.map((card) => (

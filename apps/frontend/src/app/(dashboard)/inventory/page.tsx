@@ -7,9 +7,12 @@ import { InventoryList } from './components/inventory-list'
 import { InventoryDetail } from './components/inventory-detail'
 import { BatchForm } from './components/batch-form'
 import { PageSkeleton } from '@/components/skeletons'
+import { PageHeader } from '@/components/page-header'
+import { useTranslation } from '@/i18n/use-translation'
 
 export default function InventoryPage() {
   const { fetchItems } = useInventory()
+  const { t } = useTranslation()
   const loading = useInventoryStore((s) => s.loading)
   const items = useInventoryStore((s) => s.items)
   const detailOpen = useInventoryStore((s) => s.detailOpen)
@@ -19,10 +22,10 @@ export default function InventoryPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-medium tracking-tight">Inventario</h1>
-        <p className="text-sm text-muted-foreground font-light mt-1">Stock por producto y lotes</p>
-      </div>
+      <PageHeader
+        title={t('inventory')}
+        description={t('inventory_desc')}
+      />
 
       {loading && items.length === 0 ? (
         <PageSkeleton />

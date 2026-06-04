@@ -9,6 +9,7 @@ import { useTranslation } from '@/i18n/use-translation'
 import { useAdminClients } from './hooks/use-admin-clients'
 import { ClientsList } from './components/clients-list'
 import { CreateClientDialog } from './components/create-client-dialog'
+import { PageHeader } from '@/components/page-header'
 
 export default function AdminPage() {
   const { user } = useAuth()
@@ -42,18 +43,15 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-medium tracking-tight">Panel de Administración</h1>
-          <p className="text-sm text-muted-foreground font-light mt-1">
-            Gestiona todos los clientes desde un solo lugar
-          </p>
-        </div>
+      <PageHeader
+        title={t('admin')}
+        description={t('admin_desc')}
+      >
         <Button onClick={() => setCreateOpen(true)}>
           <Icon icon="lucide:plus" className="h-4 w-4 mr-2" />
           Nuevo cliente
         </Button>
-      </div>
+      </PageHeader>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>

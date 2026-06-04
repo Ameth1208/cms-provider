@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { PageSkeleton } from '@/components/skeletons'
+import { PageHeader } from '@/components/page-header'
+import { useTranslation } from '@/i18n/use-translation'
 
 interface TagWithCount {
   id: string
@@ -20,6 +22,7 @@ interface TagWithCount {
 
 export default function TagsPage() {
   const { token } = useAuth()
+  const { t } = useTranslation()
   const [tags, setTags] = useState<TagWithCount[]>([])
   const [loading, setLoading] = useState(true)
   const [name, setName] = useState('')
@@ -64,7 +67,7 @@ export default function TagsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Tags</h1>
+      <PageHeader title={t('tags')} />
 
       <Card>
         <CardHeader>

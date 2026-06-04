@@ -26,6 +26,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
+import { PageHeader } from '@/components/page-header'
 import type { Category } from '@cms/shared'
 
 function generateSlug(name: string) {
@@ -273,18 +274,15 @@ export default function CategoriesPage() {
   return (
     <div className="space-y-6 pb-10">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Categorías</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {totalCount} {totalCount === 1 ? 'categoría' : 'categorías'} en total
-          </p>
-        </div>
+      <PageHeader
+        title="Categorías"
+        description={`${totalCount} ${totalCount === 1 ? 'categoría' : 'categorías'} en total`}
+      >
         <Button onClick={() => setCreateOpen(true)} className="gap-2">
           <Icon icon="lucide:plus" className="h-4 w-4" />
           <span className="hidden sm:inline">Nueva categoría</span>
         </Button>
-      </div>
+      </PageHeader>
 
       {/* Search */}
       <div className="rounded-xl bg-card p-4">
