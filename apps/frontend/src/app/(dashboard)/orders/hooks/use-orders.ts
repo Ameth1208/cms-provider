@@ -3,18 +3,106 @@
 import { useState, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { api } from '@/lib/api-client'
-import type { Order } from '@cms/shared'
+
+export interface OrderItem {
+  id: string
+  catalogItemId: string
+  catalogItemName: string
+  quantity: number
+  unitPrice: number
+  totalPrice: number
+}
+
+export interface Order {
+  id: string
+  status: string
+  paymentStatus: string
+  shippingStatus: string
+  subtotal: number
+  discount: number
+  tax: number
+  shippingCost: number
+  total: number
+  customerId?: string
+  customerName: string
+  customerEmail: string
+  customerPhone?: string
+  customer?: {
+    id: string
+    name: string
+    email: string
+    phone?: string
+  }
+  shippingAddress?: string
+  shippingCity?: string
+  shippingState?: string
+  shippingZip?: string
+  shippingCountry?: string
+  shippingMethodId?: string
+  shippingMethod?: {
+    id: string
+    name: string
+    price: number
+  }
+  carrier?: string
+  trackingNumber?: string
+  shippedAt?: string
+  deliveredAt?: string
+  notes?: string
+  internalNotes?: string
+  couponCode?: string
+  items: OrderItem[]
+  payments?: {
+    id: string
+    status: string
+    amount: number
+    method: string
+  }[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateOrderData {
+  customerId?: string
+  customerName: string
+  customerEmail: string
+  customerPhone?: string
+  shippingMethodId?: string
+  shippingAddress?: string
+  shippingCity?: string
+  shippingState?: string
+  shippingZip?: string
+  shippingCountry?: string
+  notes?: string
+  internalNotes?: string
+  items: { catalogItemId: string; quantity: number }[]
+  couponCode?: string
+}
 
 export function useOrders() {
   const { token } = useAuth()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(false)
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    pendingOrders: 0,
+    processingOrders: 0,
+    shippedOrders: 0,
+    deliveredOrders: 0,
+    totalRevenue: 0,
+  })
 
-  const fetchOrders = useCallback(async () => {
+  const fetchOrders = useCallback(async (filters?: { status?: string; paymentStatus?: string; customerId?: string }) => {
     if (!token) return
     setLoading(true)
     try {
-      const data = await api.get<Order[]>('/orders', token)
+      const params = new URLSearchParams()
+      if (filters?.status) params.append('status', filters.status)
+      if (filters?.paymentStatus) params.append('paymentStatus', filters.paymentStatus)
+      if (filters?.customerId) params.append('customerId', filters.customerId)
+      
+      const qs = params.toString()
+      const data = await api.get<Order[]>(`/orders${qs ? '?' + qs : ''}`, token)
       setOrders(data)
     } catch {
       setOrders([])
@@ -23,9 +111,35 @@ export function useOrders() {
     }
   }, [token])
 
+  const fetchStats = useCallback(async () => {
+    if (!token) return
+    try {
+      const data = await api.get<typeof stats>('/orders/stats', token)
+      setStats(data)
+    } catch {
+      // ignore
+    }
+  }, [token])
+
+  const createOrder = useCallback(async (data: CreateOrderData) => {
+    if (!token) return null
+    const order = await api.post<Order>('/orders', data, token)
+    setOrders((prev) => [order, ...prev])
+    return order
+  }, [token])
+
   const updateStatus = useCallback(async (id: string, status: string) => {
     if (!token) return
-    const updated = await api.put<Order>(`/orders/${id}`, { status }, token)
+    const updated = await api.put<Order>(`/orders/${id}/status`, { status }, token)
+    setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)))
+  }, [token])
+
+  const updateShippingStatus = useCallback(async (id: string, shippingStatus: string, carrier?: string, trackingNumber?: string) => {
+    if (!token) return
+    const data: any = { shippingStatus }
+    if (carrier) data.carrier = carrier
+    if (trackingNumber) data.trackingNumber = trackingNumber
+    const updated = await api.put<Order>(`/orders/${id}`, data, token)
     setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)))
   }, [token])
 
@@ -36,5 +150,31 @@ export function useOrders() {
     return updated
   }, [token])
 
-  return { orders, loading, fetchOrders, updateStatus, updateOrder }
+  const addOrderItem = useCallback(async (orderId: string, item: { catalogItemId: string; quantity: number }) => {
+    if (!token) return
+    const updated = await api.post<Order>(`/orders/${orderId}/items`, item, token)
+    setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)))
+    return updated
+  }, [token])
+
+  const removeOrderItem = useCallback(async (orderId: string, itemId: string) => {
+    if (!token) return
+    const updated = await api.delete<Order>(`/orders/${orderId}/items/${itemId}`, token)
+    setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)))
+    return updated
+  }, [token])
+
+  return { 
+    orders, 
+    loading, 
+    stats,
+    fetchOrders, 
+    fetchStats,
+    createOrder,
+    updateStatus, 
+    updateShippingStatus,
+    updateOrder,
+    addOrderItem,
+    removeOrderItem
+  }
 }
