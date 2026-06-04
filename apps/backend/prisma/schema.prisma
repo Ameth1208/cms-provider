@@ -43,6 +43,34 @@ enum CatalogItemDiscountType {
   FIXED
 }
 
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  CASH
+  BANK_TRANSFER
+  MERCADOPAGO
+  STRIPE
+  PAYPAL
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIAL
+}
+
+enum ShippingStatus {
+  PENDING
+  READY
+  SHIPPED
+  IN_TRANSIT
+  DELIVERED
+  RETURNED
+}
+
 // ─── Multi-tenant ───
 
 model Organization {
@@ -61,6 +89,8 @@ model Organization {
   tags             Tag[]
   categories       Category[]
   orders           Order[]
+  customers        Customer[]
+  shippingMethods  ShippingMethod[]
   campaigns        Campaign[]
   systemSettings   SystemSetting[]
   apiKeys          ApiKey[]
@@ -281,37 +311,54 @@ model Media {
 // ─── Orders ───
 
 model Order {
-  id               String      @id @default(uuid())
-  status           OrderStatus @default(PENDING)
-  subtotal         Float
-  discount         Float       @default(0)
-  total            Float
-  customerName     String
-  customerEmail    String
-  customerPhone    String?
-  notes            String?
-  couponCode       String?
+  id                String         @id @default(uuid())
+  status            OrderStatus    @default(PENDING)
+  paymentStatus     PaymentStatus  @default(PENDING)
+  subtotal          Float
+  discount          Float          @default(0)
+  tax               Float          @default(0)
+  shippingCost      Float          @default(0)
+  total             Float
   
-  // Shipping / Logistics
-  shippingAddress  String?
-  shippingCity     String?
-  shippingState    String?
-  shippingZip      String?
-  shippingCountry  String?
-  carrier          String?
-  trackingNumber   String?
-  shippedAt        DateTime?
-  deliveredAt      DateTime?
+  // Customer (puede ser registrado o guest)
+  customerId        String?
+  customerName      String
+  customerEmail     String
+  customerPhone     String?
   
-  organizationId   String
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  // Shipping
+  shippingAddressId String?
+  shippingMethodId  String?
+  shippingAddress   String?        // fallback si no hay customer registrado
+  shippingCity      String?
+  shippingState     String?
+  shippingZip       String?
+  shippingCountry   String?
+  shippingStatus    ShippingStatus @default(PENDING)
+  carrier           String?
+  trackingNumber    String?
+  shippedAt         DateTime?
+  deliveredAt       DateTime?
+  estimatedDelivery DateTime?
+  
+  notes             String?
+  internalNotes     String?
+  couponCode        String?
+  
+  organizationId    String
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  items        OrderItem[]
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  customer       Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  shippingMethod ShippingMethod? @relation(fields: [shippingMethodId], references: [id], onDelete: SetNull)
+  items          OrderItem[]
+  payments       Payment[]
 
   @@index([organizationId])
   @@index([status])
+  @@index([customerId])
+  @@index([paymentStatus])
 }
 
 model OrderItem {
@@ -464,15 +511,19 @@ model HomepageSection {
 }
 
 model HomepageSlide {
-  id        String  @id @default(uuid())
-  sectionId String
-  imageUrl  String
-  title     String?
-  subtitle  String?
-  ctaText   String?
-  ctaLink   String?
-  order     Int     @default(0)
-  active    Boolean @default(true)
+  id              String  @id @default(uuid())
+  sectionId       String
+  imageUrl        String
+  title           String?
+  subtitle        String?
+  ctaText         String?
+  ctaLink         String?
+  bgColor         String? // Color de fondo del slide
+  buttonColor     String? // Color del botón
+  buttonTextColor String? // Color del texto del botón
+  textColor       String? // Color del texto principal
+  order           Int     @default(0)
+  active          Boolean @default(true)
 
   section HomepageSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 
@@ -510,4 +561,88 @@ model HomepageBanner {
 
   @@index([organizationId])
   @@index([sectionId])
+}
+
+// ─── Customers ───
+
+model Customer {
+  id             String   @id @default(uuid())
+  name           String
+  email          String
+  phone          String?
+  document       String?  // DNI/RUC/CUIT/etc
+  documentType   String?  // dni, ruc, passport, etc
+  active         Boolean  @default(true)
+  notes          String?
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  addresses    CustomerAddress[]
+  orders       Order[]
+
+  @@unique([email, organizationId])
+  @@index([organizationId])
+  @@index([document])
+}
+
+model CustomerAddress {
+  id         String  @id @default(uuid())
+  customerId String
+  label      String  // Casa, Trabajo, etc
+  street     String
+  city       String
+  state      String?
+  zip        String?
+  country    String  @default("AR")
+  isDefault  Boolean @default(false)
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+}
+
+// ─── Payments ───
+
+model Payment {
+  id             String        @id @default(uuid())
+  orderId        String
+  method         PaymentMethod
+  status         PaymentStatus @default(PENDING)
+  amount         Float
+  currency       String        @default("ARS")
+  reference      String?       // Referencia interna
+  externalId     String?       // ID del proveedor de pago
+  externalData   String?       // JSON string con data del proveedor
+  paidAt         DateTime?
+  refundedAt     DateTime?
+  failureReason  String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status])
+  @@index([externalId])
+}
+
+// ─── Shipping Methods ───
+
+model ShippingMethod {
+  id             String  @id @default(uuid())
+  name           String
+  description    String?
+  price          Float   @default(0)
+  estimatedDays  Int?    // Días estimados de entrega
+  active         Boolean @default(true)
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  orders       Order[]
+
+  @@index([organizationId])
 }
