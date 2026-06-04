@@ -11,6 +11,8 @@ export type Resource =
   | 'content'
   | 'batches'
   | 'reviews'
+  | 'customers'
+  | 'payments'
 
 export type Action = 'create' | 'read' | 'update' | 'delete' | 'manage'
 
@@ -43,5 +45,5 @@ export interface UserWithRoles {
   roles: Role[]
 }
 
-export const RESOURCES: Resource[] = ['catalog', 'orders', 'inventory', 'campaigns', 'users', 'roles', 'settings', 'media', 'api_keys']
+export const RESOURCES: Resource[] = ['catalog', 'orders', 'inventory', 'campaigns', 'users', 'roles', 'settings', 'media', 'api_keys', 'content', 'reviews', 'customers', 'payments']
 export const ACTIONS: Action[] = ['create', 'read', 'update', 'delete', 'manage']

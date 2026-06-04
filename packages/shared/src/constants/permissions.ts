@@ -40,6 +40,14 @@ export const DEFAULT_PERMISSIONS: { resource: Resource; action: Action; name: st
   { resource: 'api_keys', action: 'read', name: 'Ver API keys' },
   { resource: 'api_keys', action: 'update', name: 'Editar API keys' },
   { resource: 'api_keys', action: 'delete', name: 'Eliminar API keys' },
+  // Customers
+  { resource: 'customers', action: 'create', name: 'Crear clientes' },
+  { resource: 'customers', action: 'read', name: 'Ver clientes' },
+  { resource: 'customers', action: 'update', name: 'Editar clientes' },
+  { resource: 'customers', action: 'delete', name: 'Eliminar clientes' },
+  // Payments (comparte permisos con orders)
+  { resource: 'payments', action: 'read', name: 'Ver pagos' },
+  { resource: 'payments', action: 'update', name: 'Actualizar pagos' },
 ]
 
 export const ADMIN_ROLE_NAME = 'Administrador'
