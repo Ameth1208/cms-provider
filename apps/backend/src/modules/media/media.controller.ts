@@ -13,6 +13,14 @@ import { RequirePermission } from '../../common/decorators/permission.decorator'
 export class MediaController {
   constructor(private media: MediaService) {}
 
+  @Post('upload')
+  @RequirePermission('media', 'create')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadGeneric(@UploadedFile() file: any, @Body('folder') folder?: string) {
+    return this.media.uploadGeneric(file, folder)
+  }
+
   @Post('upload/:catalogItemId')
   @RequirePermission('media', 'create')
   @ApiConsumes('multipart/form-data')

@@ -67,6 +67,10 @@ export class ContentController {
       subtitle?: string
       ctaText?: string
       ctaLink?: string
+      bgColor?: string
+      buttonColor?: string
+      buttonTextColor?: string
+      textColor?: string
       order?: number
     },
     @CurrentUser('organizationId') orgId: string,
@@ -84,6 +88,10 @@ export class ContentController {
       subtitle?: string
       ctaText?: string
       ctaLink?: string
+      bgColor?: string
+      buttonColor?: string
+      buttonTextColor?: string
+      textColor?: string
       order?: number
       active?: boolean
     },

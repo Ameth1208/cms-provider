@@ -23,6 +23,19 @@ export class MediaService {
     return 'DOCUMENT'
   }
 
+  async uploadGeneric(file: UploadedFile, folder?: string) {
+    if (!file) throw new BadRequestException('File is required')
+
+    const ext = file.originalname.split('.').pop()
+    const prefix = folder ? `${folder}/` : ''
+    const filename = `${prefix}${uuid()}.${ext}`
+    const url = await this.storage.upload(filename, file.buffer, {
+      contentType: file.mimetype,
+    })
+
+    return { url, filename }
+  }
+
   async upload(
     file: UploadedFile,
     catalogItemId: string,
