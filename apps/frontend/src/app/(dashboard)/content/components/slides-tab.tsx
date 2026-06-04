@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ListSkeleton } from '@/components/skeletons'
 import { useContent, type Slide, type Section } from '../hooks/use-content'
+import { ImageUpload } from '@/components/image-upload'
 
 export function SlidesTab() {
   const content = useContent()
@@ -138,8 +139,8 @@ export function SlidesTab() {
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label>URL de imagen</Label>
-              <Input value={formImage} onChange={(e) => setFormImage(e.target.value)} placeholder="https://..." />
+              <Label>Imagen</Label>
+              <ImageUpload value={formImage} onChange={setFormImage} folder="slides" />
             </div>
             <div className="space-y-2">
               <Label>Título</Label>

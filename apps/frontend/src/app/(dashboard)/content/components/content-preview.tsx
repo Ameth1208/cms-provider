@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Icon } from '@iconify/react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { useContent, type Section, type Slide, type Banner, type Spotlight } from '../hooks/use-content'
+
+import { type Section, type Slide, type Banner, type Spotlight } from '../hooks/use-content'
 
 interface ContentPreviewProps {
   sections: Section[]
@@ -50,13 +49,13 @@ export function ContentPreview({ sections, slides, banners, spotlights }: Conten
 
         {/* Hero */}
         {activeSlides.length > 0 && (
-          <div className="relative h-40 bg-muted rounded-lg overflow-hidden">
+          <div className="relative h-48 bg-muted rounded-lg overflow-hidden">
             {activeSlides.map((slide, index) => (
               <div
                 key={slide.id}
-                className={`absolute inset-0 transition-opacity duration-500 ${
-                  index === currentSlide ? 'opacity-100' : 'opacity-0'
-                }`}
+                className={`absolute inset-0 transition-opacity duration-500 ${index === currentSlide ? 'opacity-100' : 'opacity-0'
+                  }`}
+                style={{ backgroundColor: slide.bgColor || undefined }}
               >
                 {slide.imageUrl ? (
                   <img src={slide.imageUrl} alt="" className="w-full h-full object-cover" />
@@ -65,14 +64,36 @@ export function ContentPreview({ sections, slides, banners, spotlights }: Conten
                     <Icon icon="lucide:image" className="h-10 w-10 text-muted-foreground/30" />
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                  <p className="text-sm font-semibold">{slide.title || 'Título'}</p>
-                  <p className="text-xs text-white/80">{slide.subtitle || 'Subtítulo'}</p>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <p 
+                    className="text-base font-bold"
+                    style={{ color: slide.textColor || 'white' }}
+                  >
+                    {slide.title || 'Título'}
+                  </p>
+                  <p 
+                    className="text-sm mt-1"
+                    style={{ color: slide.textColor ? `${slide.textColor}cc` : 'rgba(255,255,255,0.8)' }}
+                  >
+                    {slide.subtitle || 'Subtítulo'}
+                  </p>
+                  
+                  {slide.ctaText && (
+                    <button
+                      className="mt-3 px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                      style={{
+                        backgroundColor: slide.buttonColor || '#fff',
+                        color: slide.buttonTextColor || '#000',
+                      }}
+                    >
+                      {slide.ctaText} →
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
-            
+
             {activeSlides.length > 1 && (
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
                 {activeSlides.map((_, i) => (

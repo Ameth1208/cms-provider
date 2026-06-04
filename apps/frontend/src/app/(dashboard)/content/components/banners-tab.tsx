@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ListSkeleton } from '@/components/skeletons'
 import { useContent, type Banner } from '../hooks/use-content'
+import { ImageUpload } from '@/components/image-upload'
 
 export function BannersTab() {
   const content = useContent()
@@ -110,8 +111,8 @@ export function BannersTab() {
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label>URL de imagen</Label>
-              <Input value={formImage} onChange={(e) => setFormImage(e.target.value)} placeholder="https://..." />
+              <Label>Imagen</Label>
+              <ImageUpload value={formImage} onChange={setFormImage} folder="banners" />
             </div>
             <div className="space-y-2">
               <Label>Título</Label>

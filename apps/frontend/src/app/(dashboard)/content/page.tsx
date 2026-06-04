@@ -1,17 +1,18 @@
 'use client'
 
-import { Icon } from '@iconify/react'
 import { ContentBuilder } from './components/content-builder'
+import { PageHeader } from '@/components/page-header'
+import { useTranslation } from '@/i18n/use-translation'
 
 export default function ContentPage() {
+  const { t } = useTranslation()
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-medium tracking-tight">Contenido del sitio</h1>
-        <p className="text-sm text-muted-foreground font-light mt-1">
-          Arrastra para ordenar, edita y previsualiza tu homepage en tiempo real
-        </p>
-      </div>
+      <PageHeader
+        title={t('content')}
+        description={t('content_desc')}
+      />
 
       <ContentBuilder />
     </div>
