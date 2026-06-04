@@ -1,7 +1,8 @@
 'use client'
 
-import { Icon } from '@iconify/react'
+import { UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/page-header'
 import { useAuth } from '@/lib/auth-context'
 import { useTranslation } from '@/i18n/use-translation'
 import { useUsers } from '../hooks/use-users'
@@ -16,17 +17,13 @@ export function UsersHeader() {
   )
 
   return (
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-2xl font-medium tracking-tight">{t('users_title')}</h1>
-        <p className="text-sm text-muted-foreground font-light mt-1">{t('users_description')}</p>
-      </div>
+    <PageHeader title={t('users_title')} description={t('users_description')}>
       {canManage && (
         <Button onClick={() => { resetForm(); setCreateOpen(true) }}>
-          <Icon icon="lucide:user-plus" className="h-4 w-4 mr-2" />
+          <UserPlus className="h-4 w-4 mr-2" />
           {t('users_invite')}
         </Button>
       )}
-    </div>
+    </PageHeader>
   )
 }

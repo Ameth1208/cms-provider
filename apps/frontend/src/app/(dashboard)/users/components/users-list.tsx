@@ -1,7 +1,23 @@
 'use client'
 
 import { useState } from 'react'
-import { Icon } from '@iconify/react'
+import {
+  Search,
+  Pencil,
+  UserX,
+  UserCheck,
+  Trash2,
+  Check,
+  Minus,
+  Package,
+  ShoppingCart,
+  Warehouse,
+  Tag,
+  Users,
+  LayoutTemplate,
+  Settings,
+  MoreHorizontal,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -20,19 +36,25 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useTranslation } from '@/i18n/use-translation'
 import { useUsers } from '../hooks/use-users'
 import { UserBlockDialog } from './user-block-dialog'
 import type { UserRecord } from '../store/users-store'
 
 const ALL_MODULES = [
-  { key: 'catalog', label: 'Catálogo', icon: 'lucide:package' },
-  { key: 'orders', label: 'Pedidos', icon: 'lucide:shopping-cart' },
-  { key: 'inventory', label: 'Inventario', icon: 'lucide:warehouse' },
-  { key: 'campaigns', label: 'Campañas', icon: 'lucide:tag' },
-  { key: 'users', label: 'Usuarios', icon: 'lucide:users' },
-  { key: 'content', label: 'Contenido', icon: 'lucide:layout-template' },
-  { key: 'settings', label: 'Ajustes', icon: 'lucide:settings' },
+  { key: 'catalog', label: 'Catálogo', Icon: Package },
+  { key: 'orders', label: 'Pedidos', Icon: ShoppingCart },
+  { key: 'inventory', label: 'Inventario', Icon: Warehouse },
+  { key: 'campaigns', label: 'Campañas', Icon: Tag },
+  { key: 'users', label: 'Usuarios', Icon: Users },
+  { key: 'content', label: 'Contenido', Icon: LayoutTemplate },
+  { key: 'settings', label: 'Ajustes', Icon: Settings },
 ]
 
 function ModulesSummary({ modules }: { modules: string[] }) {
@@ -68,10 +90,10 @@ function ModulesSummary({ modules }: { modules: string[] }) {
         <div className="flex flex-col gap-1 py-1">
           {ALL_MODULES.map((mod) => {
             const isEnabled = enabled.includes(mod.key)
+            const IconComponent = isEnabled ? Check : Minus
             return (
               <div key={mod.key} className="flex items-center gap-2">
-                <Icon
-                  icon={isEnabled ? 'lucide:check' : 'lucide:minus'}
+                <IconComponent
                   className={`h-3 w-3 ${isEnabled ? 'text-primary' : 'text-muted-foreground/40'}`}
                 />
                 <span className={`text-xs ${isEnabled ? '' : 'text-muted-foreground/60'}`}>{mod.label}</span>
@@ -123,10 +145,7 @@ export function UsersList() {
     <TooltipProvider delayDuration={200}>
       <div className="rounded-xl bg-card p-4">
         <div className="relative flex-1 max-w-md">
-          <Icon
-            icon="lucide:search"
-            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
-          />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
             placeholder={t('users_search')}
@@ -195,35 +214,45 @@ export function UsersList() {
                         className="h-8 text-muted-foreground hover:text-foreground gap-1.5"
                         onClick={() => openEdit(user)}
                       >
-                        <Icon icon="lucide:pencil" className="h-3.5 w-3.5" />
+                        <Pencil className="h-3.5 w-3.5" />
                         {t('edit')}
                       </Button>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0"
-                            onClick={() => setBlockTarget(user)}
                           >
-                            <Icon
-                              icon={user.active ? 'lucide:user-x' : 'lucide:user-check'}
-                              className="h-4 w-4"
-                            />
+                            <MoreHorizontal className="h-4 w-4" />
                           </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top">
-                          {user.active ? t('users_block') : t('users_activate')}
-                        </TooltipContent>
-                      </Tooltip>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                        onClick={() => openDelete(user)}
-                      >
-                        <Icon icon="lucide:trash-2" className="h-4 w-4" />
-                      </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem
+                            onClick={() => setBlockTarget(user)}
+                            className="gap-2 cursor-pointer"
+                          >
+                            {user.active ? (
+                              <>
+                                <UserX className="h-4 w-4 text-orange-500" />
+                                <span>{t('users_block')}</span>
+                              </>
+                            ) : (
+                              <>
+                                <UserCheck className="h-4 w-4 text-green-500" />
+                                <span>{t('users_activate')}</span>
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => openDelete(user)}
+                            className="gap-2 text-destructive focus:text-destructive cursor-pointer"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span>{t('users_delete')}</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </TableCell>
                 </TableRow>

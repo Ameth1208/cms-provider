@@ -1,6 +1,15 @@
 'use client'
 
-import { Icon } from '@iconify/react'
+import {
+  Check,
+  Package,
+  ShoppingCart,
+  Warehouse,
+  Tag,
+  Users,
+  LayoutTemplate,
+  Settings,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,13 +18,13 @@ import { useTranslation } from '@/i18n/use-translation'
 import { useUsers } from '../hooks/use-users'
 
 const AVAILABLE_MODULES = [
-  { key: 'catalog', label: 'Catálogo', icon: 'lucide:package' },
-  { key: 'orders', label: 'Pedidos', icon: 'lucide:shopping-cart' },
-  { key: 'inventory', label: 'Inventario', icon: 'lucide:warehouse' },
-  { key: 'campaigns', label: 'Campañas', icon: 'lucide:tag' },
-  { key: 'users', label: 'Usuarios', icon: 'lucide:users' },
-  { key: 'content', label: 'Contenido', icon: 'lucide:layout-template' },
-  { key: 'settings', label: 'Ajustes', icon: 'lucide:settings' },
+  { key: 'catalog', label: 'Catálogo', Icon: Package },
+  { key: 'orders', label: 'Pedidos', Icon: ShoppingCart },
+  { key: 'inventory', label: 'Inventario', Icon: Warehouse },
+  { key: 'campaigns', label: 'Campañas', Icon: Tag },
+  { key: 'users', label: 'Usuarios', Icon: Users },
+  { key: 'content', label: 'Contenido', Icon: LayoutTemplate },
+  { key: 'settings', label: 'Ajustes', Icon: Settings },
 ]
 
 export function UserEditDialog() {
@@ -100,6 +109,7 @@ export function UserEditDialog() {
             <div className="grid grid-cols-2 gap-2">
               {AVAILABLE_MODULES.map((mod) => {
                 const enabled = formModulesEnabled.includes(mod.key)
+                const ModIcon = mod.Icon
                 return (
                   <button
                     key={mod.key}
@@ -122,10 +132,10 @@ export function UserEditDialog() {
                         enabled ? 'bg-primary/15' : 'bg-muted'
                       }`}
                     >
-                      <Icon icon={mod.icon} className="h-4 w-4" />
+                      <ModIcon className="h-4 w-4" />
                     </div>
                     <span className="text-xs font-medium">{mod.label}</span>
-                    {enabled && <Icon icon="lucide:check" className="h-3.5 w-3.5 ml-auto" />}
+                    {enabled && <Check className="h-3.5 w-3.5 ml-auto" />}
                   </button>
                 )
               })}
