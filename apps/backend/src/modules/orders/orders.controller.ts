@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Param, Body, Query, UseGuards } from '@nestjs/common'
+import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { OrdersService } from './orders.service'
 import { HybridAuthGuard } from '../../common/guards/hybrid-auth.guard'
@@ -74,5 +74,27 @@ export class OrdersController {
   @RequirePermission('orders', 'update')
   updateStatus(@Param('id') id: string, @Body('status') status: string, @CurrentUser('organizationId') orgId: string) {
     return this.orders.updateStatus(id, status, orgId)
+  }
+
+  @Post(':id/items')
+  @UseGuards(HybridAuthGuard, PermissionGuard)
+  @RequirePermission('orders', 'update')
+  addItem(
+    @Param('id') id: string,
+    @Body() body: { catalogItemId: string; quantity: number },
+    @CurrentUser('organizationId') orgId: string,
+  ) {
+    return this.orders.addItem(id, body, orgId)
+  }
+
+  @Delete(':id/items/:itemId')
+  @UseGuards(HybridAuthGuard, PermissionGuard)
+  @RequirePermission('orders', 'update')
+  removeItem(
+    @Param('id') id: string,
+    @Param('itemId') itemId: string,
+    @CurrentUser('organizationId') orgId: string,
+  ) {
+    return this.orders.removeItem(id, itemId, orgId)
   }
 }

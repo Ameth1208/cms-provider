@@ -7,6 +7,9 @@ import { RolesPermissionsModule } from './modules/roles-permissions/roles-permis
 import { CatalogModule } from './modules/catalog/catalog.module'
 import { MediaModule } from './modules/media/media.module'
 import { OrdersModule } from './modules/orders/orders.module'
+import { CustomersModule } from './modules/customers/customers.module'
+import { PaymentsModule } from './modules/payments/payments.module'
+import { ShippingModule } from './modules/shipping/shipping.module'
 import { InventoryModule } from './modules/inventory/inventory.module'
 import { CampaignsModule } from './modules/campaigns/campaigns.module'
 import { CompanySettingsModule } from './modules/company-settings/company-settings.module'
@@ -30,6 +33,9 @@ import { StorageModule } from './common/storage/storage.module'
     CatalogModule,
     MediaModule,
     OrdersModule,
+    CustomersModule,
+    PaymentsModule,
+    ShippingModule,
     InventoryModule,
     CampaignsModule,
     CompanySettingsModule,

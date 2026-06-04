@@ -95,7 +95,7 @@ export class AuthService {
     const resources = [
       'catalog', 'orders', 'inventory', 'campaigns',
       'users', 'roles', 'settings', 'media', 'api_keys',
-      'content', 'batches', 'reviews',
+      'content', 'batches', 'reviews', 'customers', 'payments',
     ]
     const actions = ['create', 'read', 'update', 'delete', 'manage']
 
