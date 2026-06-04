@@ -5,6 +5,7 @@
   "users_invite": "Invite user",
   "users_edit": "Edit user",
   "users_delete": "Delete user",
+  "users_delete_confirm": "Confirm deletion of {email}? This action cannot be undone.",
   "users_name": "Name",
   "users_email": "Email",
   "users_roles": "Roles",

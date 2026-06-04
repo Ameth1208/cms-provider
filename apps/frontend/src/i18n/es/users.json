@@ -5,6 +5,7 @@
   "users_invite": "Invitar usuario",
   "users_edit": "Editar usuario",
   "users_delete": "Eliminar usuario",
+  "users_delete_confirm": "¿Confirmar eliminación de {email}? Esta acción no se puede deshacer.",
   "users_name": "Nombre",
   "users_email": "Email",
   "users_roles": "Roles",
