@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, Package, Clock, Truck, CheckCircle, LayoutGrid, List, BarChart3, Loader2 } from 'lucide-react'
+import { Plus, Package, Clock, Truck, CheckCircle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { PageHeader } from '@/components/page-header'
@@ -18,9 +18,7 @@ export default function OrdersPage() {
   const orders = useOrdersStore((s) => s.orders)
   const stats = useOrdersStore((s) => s.stats)
   const loading = useOrdersStore((s) => s.loading)
-  const viewMode = useOrdersStore((s) => s.viewMode)
   const statusFilter = useOrdersStore((s) => s.statusFilter)
-  const setViewMode = useOrdersStore((s) => s.setViewMode)
   const setStatusFilter = useOrdersStore((s) => s.setStatusFilter)
   const openCreate = useOrdersStore((s) => s.openCreate)
   const { t } = useTranslation()
@@ -62,25 +60,12 @@ export default function OrdersPage() {
   return (
     <div className="space-y-6">
       <PageHeader title={t('orders')} description={t('orders_desc')}>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center bg-muted rounded-lg p-1">
-            {[
-              { k: 'cards', i: LayoutGrid },
-              { k: 'kanban', i: BarChart3 },
-              { k: 'table', i: List },
-            ].map(({ k, i: Icon }) => (
-              <Button key={k} variant={viewMode === k ? 'secondary' : 'ghost'} size="sm" className="h-8 w-8 p-0" onClick={() => setViewMode(k as any)}>
-                <Icon className="h-4 w-4" />
-              </Button>
-            ))}
-          </div>
-          {canCreate && (
-            <Button onClick={openCreate}>
-              <Plus className="h-4 w-4 mr-2" />
-              {t('orders_create')}
-            </Button>
-          )}
-        </div>
+        {canCreate && (
+          <Button onClick={openCreate}>
+            <Plus className="h-4 w-4 mr-2" />
+            {t('orders_create')}
+          </Button>
+        )}
       </PageHeader>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -105,7 +90,11 @@ export default function OrdersPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button variant={statusFilter === '' ? 'default' : 'outline'} size="sm" onClick={() => setStatusFilter('')}>
+        <Button
+          variant={statusFilter === '' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setStatusFilter('')}
+        >
           {t('all')}
         </Button>
         {[
@@ -115,7 +104,13 @@ export default function OrdersPage() {
           { key: 'SHIPPED', color: 'text-indigo-600' },
           { key: 'DELIVERED', color: 'text-emerald-600' },
         ].map((s) => (
-          <Button key={s.key} variant={statusFilter === s.key ? 'default' : 'outline'} size="sm" onClick={() => setStatusFilter(statusFilter === s.key ? '' : s.key)} className={statusFilter === s.key ? '' : s.color}>
+          <Button
+            key={s.key}
+            variant={statusFilter === s.key ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setStatusFilter(statusFilter === s.key ? '' : s.key)}
+            className={statusFilter === s.key ? '' : s.color}
+          >
             {t(`order_status_${s.key.toLowerCase()}`)}
           </Button>
         ))}

@@ -139,7 +139,7 @@ export function useOrders() {
 
   const updateStatus = useCallback(async (id: string, status: string) => {
     if (!token) return
-    const updated = await api.put<Order>(`/orders/${id}/status`, { status }, token)
+    const updated = await api.post<Order>(`/orders/${id}/status`, { status }, token)
     updateOrderInStore(updated)
   }, [token, updateOrderInStore])
 
