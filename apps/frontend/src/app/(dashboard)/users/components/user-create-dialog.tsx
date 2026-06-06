@@ -11,6 +11,8 @@ import {
   Users,
   LayoutTemplate,
   Settings,
+  Copy,
+  Link,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -54,6 +56,8 @@ export function UserCreateDialog() {
   } = useUsers()
 
   const [invited, setInvited] = useState(false)
+  const [invitationUrl, setInvitationUrl] = useState('')
+  const [copied, setCopied] = useState(false)
 
   const allSelected = formModulesEnabled.length === AVAILABLE_MODULES.length
 
@@ -66,19 +70,31 @@ export function UserCreateDialog() {
   }
 
   const handleCreate = async () => {
-    await createUser()
-    setInvited(true)
-    setTimeout(() => {
-      setInvited(false)
-    }, 4000)
+    const result = await createUser()
+    if (result?.invitationUrl) {
+      setInvitationUrl(result.invitationUrl)
+      setInvited(true)
+    }
   }
 
   const handleClose = (open: boolean) => {
     if (!open) {
       setInvited(false)
+      setInvitationUrl('')
+      setCopied(false)
       resetForm()
     }
     setCreateOpen(open)
+  }
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(invitationUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // ignore
+    }
   }
 
   return (
@@ -90,15 +106,45 @@ export function UserCreateDialog() {
         </DialogHeader>
 
         {invited ? (
-          <div className="py-8 flex flex-col items-center gap-3 text-center">
+          <div className="py-6 flex flex-col items-center gap-4 text-center">
             <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
               <MailCheck className="h-6 w-6 text-primary" />
             </div>
-            <div>
+            <div className="w-full">
               <p className="font-medium">{t('users_invite_sent')}</p>
-              <p className="text-sm text-muted-foreground font-light">
+              <p className="text-sm text-muted-foreground font-light mb-4">
                 {t('users_invite_sent_desc', { email: formEmail.trim() })}
               </p>
+              
+              <div className="bg-muted rounded-lg p-3 text-left">
+                <p className="text-xs text-muted-foreground mb-2">{t('users_invite_link')}:</p>
+                <div className="flex items-center gap-2">
+                  <Link className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <Input
+                    value={invitationUrl}
+                    readOnly
+                    className="text-xs bg-background border-border"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleCopy}
+                    className="shrink-0 gap-1"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="h-3.5 w-3.5" />
+                        <span className="text-xs">{t('users_invite_copied')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3.5 w-3.5" />
+                        <span className="text-xs">{t('users_invite_copy')}</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
             </div>
             <Button variant="outline" onClick={() => handleClose(false)} className="mt-2">
               {t('users_close')}

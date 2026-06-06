@@ -20,8 +20,14 @@ interface AuthState {
   isLoading: boolean
 }
 
+type LoginResult =
+  | { success: true }
+  | { success: false; error: string; requireOrganizationSelection?: false }
+  | { success: false; requireOrganizationSelection: true; organizations: { id: string; name: string; slug: string }[]; error?: string }
+
 interface AuthContextValue extends AuthState {
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  login: (email: string, password: string, organizationSlug?: string) => Promise<LoginResult>
+  setAuth: (data: { token: string; user: AuthUser }) => void
   logout: () => void
   isAuthenticated: boolean
 }
@@ -79,12 +85,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     init()
   }, [])
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (
+    email: string,
+    password: string,
+    organizationSlug?: string,
+  ): Promise<LoginResult> => {
     try {
       const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, organizationSlug }),
       })
 
       if (!res.ok) {
@@ -93,6 +103,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const data = await res.json()
+
+      if (data.requireOrganizationSelection) {
+        return {
+          success: false,
+          requireOrganizationSelection: true,
+          organizations: data.organizations,
+        }
+      }
+
       const authData = {
         token: data.accessToken,
         user: {
@@ -121,9 +140,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/login')
   }, [router])
 
+  const setAuth = useCallback((data: { token: string; user: AuthUser }) => {
+    const authData = {
+      token: data.token,
+      user: {
+        ...data.user,
+        roles: data.user.roles || [],
+        modulesEnabled: data.user.modulesEnabled || [],
+      },
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(authData))
+    setState({ token: authData.token, user: authData.user, isLoading: false })
+  }, [])
+
   const value: AuthContextValue = {
     ...state,
     login,
+    setAuth,
     logout,
     isAuthenticated: !!state.token,
   }

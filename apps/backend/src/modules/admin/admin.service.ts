@@ -37,14 +37,6 @@ export class AdminService {
     modulesEnabled?: string[]
     plan?: string
   }) {
-    // Check if email already exists
-    const existing = await this.prisma.user.findUnique({
-      where: { email: data.adminEmail },
-    })
-    if (existing) {
-      throw new ConflictException('Email already registered')
-    }
-
     // Create organization
     const org = await this.prisma.organization.create({
       data: {

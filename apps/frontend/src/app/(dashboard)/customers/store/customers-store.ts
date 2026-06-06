@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { detectCountryFromPhone, stripPrefix } from '@/components/ui/phone-input'
 
 export interface CustomerAddress {
   id: string
@@ -34,6 +35,7 @@ interface CustomersState {
   formName: string
   formEmail: string
   formPhone: string
+  formPhoneCountry: string
   formDocument: string
   formDocumentType: string
   formNotes: string
@@ -45,6 +47,7 @@ interface CustomersState {
   setFormName: (name: string) => void
   setFormEmail: (email: string) => void
   setFormPhone: (phone: string) => void
+  setFormPhoneCountry: (country: string) => void
   setFormDocument: (document: string) => void
   setFormDocumentType: (type: string) => void
   setFormNotes: (notes: string) => void
@@ -61,6 +64,7 @@ export const useCustomersStore = create<CustomersState>((set) => ({
   formName: '',
   formEmail: '',
   formPhone: '',
+  formPhoneCountry: 'AR',
   formDocument: '',
   formDocumentType: 'dni',
   formNotes: '',
@@ -72,23 +76,29 @@ export const useCustomersStore = create<CustomersState>((set) => ({
   setFormName: (formName) => set({ formName }),
   setFormEmail: (formEmail) => set({ formEmail }),
   setFormPhone: (formPhone) => set({ formPhone }),
+  setFormPhoneCountry: (formPhoneCountry) => set({ formPhoneCountry }),
   setFormDocument: (formDocument) => set({ formDocument }),
   setFormDocumentType: (formDocumentType) => set({ formDocumentType }),
   setFormNotes: (formNotes) => set({ formNotes }),
-  openEdit: (customer) => set({
-    selected: customer,
-    formName: customer.name,
-    formEmail: customer.email,
-    formPhone: customer.phone || '',
-    formDocument: customer.document || '',
-    formDocumentType: customer.documentType || 'dni',
-    formNotes: customer.notes || '',
-    editOpen: true,
-  }),
+  openEdit: (customer) => {
+    const detectedCountry = detectCountryFromPhone(customer.phone || '')
+    return set({
+      selected: customer,
+      formName: customer.name,
+      formEmail: customer.email,
+      formPhone: stripPrefix(customer.phone || '', detectedCountry),
+      formPhoneCountry: detectedCountry,
+      formDocument: customer.document || '',
+      formDocumentType: customer.documentType || 'dni',
+      formNotes: customer.notes || '',
+      editOpen: true,
+    })
+  },
   resetForm: () => set({
     formName: '',
     formEmail: '',
     formPhone: '',
+    formPhoneCountry: 'AR',
     formDocument: '',
     formDocumentType: 'dni',
     formNotes: '',

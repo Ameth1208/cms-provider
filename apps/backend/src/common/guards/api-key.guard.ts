@@ -8,7 +8,7 @@ export class ApiKeyGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest()
-    const apiKey = request.headers['x-api-key'] as string | undefined
+    const apiKey = request.headers['api-key'] as string | undefined
 
     if (!apiKey) {
       return true // Let JWT guard handle it if no API key present

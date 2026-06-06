@@ -57,7 +57,7 @@ export function ProductPreview() {
     <Card className="sticky top-6">
       <CardHeader>
         <CardTitle className="text-base font-medium">{t('title')}</CardTitle>
-        <CardDescription>Vista previa</CardDescription>
+        <CardDescription>{t('preview_desc')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="aspect-[4/3] rounded-xl bg-muted overflow-hidden relative">
@@ -120,7 +120,7 @@ export function ProductPreview() {
                 <span className="text-[10px] text-muted-foreground">{form.brand}</span>
               )}
             </div>
-            <h3 className="text-lg font-medium leading-tight">{form.name || 'Sin nombre'}</h3>
+            <h3 className="text-lg font-medium leading-tight">{form.name || t('no_name')}</h3>
             <div className="flex items-center gap-2 mt-0.5">
               {form.sku && <p className="text-xs text-muted-foreground">SKU: {form.sku}</p>}
               {form.barcode && <p className="text-xs text-muted-foreground">· {form.barcode}</p>}
@@ -172,10 +172,12 @@ export function ProductPreview() {
           {activeVariants.length > 0 && (
             <div className="p-2 rounded-lg bg-muted/50 text-xs space-y-1">
               <p className="font-medium text-foreground">
-                {activeVariants.length} {activeVariants.length === 1 ? 'variante' : 'variantes'} disponibles
+                {activeVariants.length === 1
+                  ? t('variant_available', { count: activeVariants.length })
+                  : t('variants_available', { count: activeVariants.length })}
               </p>
               <p className="text-muted-foreground">
-                Stock total: {totalStock} unidades
+                {t('total_stock', { count: totalStock })}
               </p>
             </div>
           )}

@@ -37,6 +37,8 @@ export class OrdersController {
   }
 
   @Post()
+  @UseGuards(HybridAuthGuard, PermissionGuard)
+  @RequirePermission('orders', 'create')
   create(@Body() body: {
     customerName: string; customerEmail: string; customerPhone?: string
     notes?: string; items: { catalogItemId: string; quantity: number }[]
@@ -96,5 +98,26 @@ export class OrdersController {
     @CurrentUser('organizationId') orgId: string,
   ) {
     return this.orders.removeItem(id, itemId, orgId)
+  }
+
+  @Post(':id/assign-driver')
+  @UseGuards(HybridAuthGuard, PermissionGuard)
+  @RequirePermission('orders', 'update')
+  assignDriver(
+    @Param('id') id: string,
+    @Body('driverId') driverId: string,
+    @CurrentUser('organizationId') orgId: string,
+  ) {
+    return this.orders.assignDriver(id, driverId, orgId)
+  }
+
+  @Post(':id/unassign-driver')
+  @UseGuards(HybridAuthGuard, PermissionGuard)
+  @RequirePermission('orders', 'update')
+  unassignDriver(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') orgId: string,
+  ) {
+    return this.orders.unassignDriver(id, orgId)
   }
 }

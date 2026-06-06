@@ -3,7 +3,6 @@
 import { useRef } from 'react'
 import { Icon } from '@iconify/react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
 import { useCatalogFormStore } from '../../store/catalog-form-store'
 import { useMediaUpload } from '../../hooks/use-media-upload'
 import { useTranslation } from '@/i18n/use-translation'
@@ -155,11 +154,10 @@ export function MediaSection() {
               setDragOver(true)
             }}
             onDragLeave={() => setDragOver(false)}
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-              dragOver
+            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${dragOver
                 ? 'border-primary bg-primary/5'
                 : 'border-border hover:border-primary/50 hover:bg-accent/50'
-            }`}
+              }`}
           >
             <Icon icon="lucide:upload-cloud" className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
             <p className="text-sm text-muted-foreground">
@@ -241,7 +239,7 @@ export function MediaSection() {
             <p className="text-sm text-muted-foreground">
               <span className="text-foreground font-medium">{t('upload_document')}</span>
             </p>
-            <p className="text-xs text-muted-foreground mt-1">PDF</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('pdf_format')}</p>
           </div>
           <input
             ref={docInputRef}

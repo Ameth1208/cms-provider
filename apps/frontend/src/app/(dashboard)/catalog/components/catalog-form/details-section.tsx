@@ -7,40 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Icon } from '@iconify/react'
 import { useTranslation } from '@/i18n/use-translation'
-
-function ChipGroup({
-  options,
-  value,
-  onChange,
-  label,
-}: {
-  options: { key: string; label: string }[]
-  value: string
-  onChange: (v: string) => void
-  label: string
-}) {
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      <div className="flex flex-wrap gap-1.5">
-        {options.map((opt) => (
-          <button
-            key={opt.key}
-            type="button"
-            onClick={() => onChange(value === opt.key ? '' : opt.key)}
-            className={`px-3 py-1.5 rounded-lg text-xs transition-colors ${
-              value === opt.key
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted hover:bg-accent'
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
+import { ChipGroup } from './chip-group'
 
 export function DetailsSection() {
   const form = useCatalogFormStore((s) => s.form)

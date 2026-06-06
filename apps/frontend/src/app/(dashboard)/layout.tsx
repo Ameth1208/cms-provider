@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { AppSidebar } from '@/components/app-sidebar'
+import { NotificationsDropdown } from '@/components/notifications-dropdown'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -33,6 +34,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-dvh bg-background">
       <AppSidebar />
       <main className="flex-1 overflow-y-auto min-w-0 h-dvh">
+        <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-sm border-b border-border px-6 py-3 lg:px-10 flex items-center justify-end">
+          <NotificationsDropdown />
+        </div>
         <div className="max-w-8xl mx-auto px-6 py-6 lg:px-10 lg:py-8">
           {children}
         </div>

@@ -1,7 +1,21 @@
 {
   "title": "Categorías",
+  "new_category": "Nueva categoría",
+  "new_subcategory": "Nueva subcategoría",
+  "category_description": "Crea una categoría raíz para tu catálogo.",
+  "subcategory_description": "Dentro de",
   "empty": "Sin categorías",
-  "empty_desc": "Crea tu primera categoría arriba",
+  "empty_desc": "Crea tu primera categoría para empezar",
   "subcategories": "Subcategorías",
-  "confirm_delete": "¿Eliminar categoría?"
+  "confirm_delete": "¿Eliminar categoría?",
+  "inside": "Dentro de",
+  "search_categories": "Buscar categorías...",
+  "category_count": "categoría en total",
+  "categories_count": "categorías en total",
+  "name": "Nombre",
+  "slug": "Slug",
+  "name_placeholder": "Ej: Ropa",
+  "slug_placeholder": "ej: ropa",
+  "actions": "Acciones",
+  "no_results": "No se encontraron categorías"
 }

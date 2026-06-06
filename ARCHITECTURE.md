@@ -71,7 +71,7 @@ cms-web-manager/
 ### 4.2 Auth & Authorization
 
 - **JWT**: Access token (24h) + Refresh token. Payload incluye `userId`, `email`, `organizationId`, `permissions[]`.
-- **API Keys**: Fallback para integraciones. Header `x-api-key`. Hash almacenado en BD.
+- **API Keys**: Fallback para integraciones. Header `api-key`. Hash almacenado en BD.
 - **Guard**: `HybridAuthGuard` — intenta JWT primero, luego API key.
 - **Permissions**: Decorador `@RequirePermission(resource, action)` + `PermissionGuard`.
 - **CurrentUser**: Decorador `@CurrentUser('organizationId')` inyecta el tenant en cada service call.

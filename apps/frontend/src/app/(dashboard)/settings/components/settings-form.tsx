@@ -6,10 +6,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useTranslation } from '@/i18n/use-translation'
 import { useSettings } from '../hooks/use-settings'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ImageUpload } from '@/components/ui/image-upload'
 
 export function SettingsForm() {
-  const { form, loading, saving, handleChange, handleSave } = useSettings()
+  const { t } = useTranslation()
+  const { form, loading, saving, handleChange, handleSave, uploadLogo } = useSettings()
 
   if (loading) {
     return (
@@ -23,47 +27,40 @@ export function SettingsForm() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase mb-3">
-          Configuración
-        </p>
-        <h1 className="text-3xl sm:text-4xl font-light text-foreground tracking-tight">
-          Ajustes de empresa
-        </h1>
-      </div>
+      <Alert className="bg-muted/50 border-muted">
+        <Icon icon="lucide:info" className="h-4 w-4 text-muted-foreground" />
+        <AlertDescription className="text-sm text-muted-foreground">
+          {t('settings_sidebar_info')}
+        </AlertDescription>
+      </Alert>
 
       <Card>
         <CardHeader>
-          <CardTitle>Información del negocio</CardTitle>
-          <CardDescription>Nombre y logo de tu empresa</CardDescription>
+          <CardTitle>{t('settings_business_info')}</CardTitle>
+          <CardDescription>{t('settings_business_info_desc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="companyName" className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-              Nombre de la empresa
+              {t('settings_company_name')}
             </Label>
             <Input
               id="companyName"
               value={form.companyName}
               onChange={(e) => handleChange('companyName', e.target.value)}
-              placeholder="Mi Empresa"
+              placeholder={t('settings_company_name_placeholder')}
               className="font-light"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="logoUrl" className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-              URL del logo
+            <Label className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+              {t('settings_logo_url')}
             </Label>
-            <Input
-              id="logoUrl"
-              value={form.logoUrl || ''}
-              onChange={(e) => handleChange('logoUrl', e.target.value || null)}
-              placeholder="https://ejemplo.com/logo.png"
-              className="font-light"
+            <ImageUpload
+              value={form.logoUrl}
+              onChange={(url) => handleChange('logoUrl', url)}
+              onUpload={uploadLogo}
             />
-            {form.logoUrl && (
-              <img src={form.logoUrl} alt="logo" className="h-12 mt-2 object-contain rounded-xl border" />
-            )}
           </div>
         </CardContent>
       </Card>
@@ -75,7 +72,7 @@ export function SettingsForm() {
           ) : (
             <Icon icon="lucide:save" className="mr-2 h-4 w-4" />
           )}
-          Guardar cambios
+          {t('save')}
         </Button>
       </div>
     </div>

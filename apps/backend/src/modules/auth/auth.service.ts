@@ -1,9 +1,9 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common'
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import * as bcrypt from 'bcryptjs'
 import { PrismaService } from '../../common/prisma.service'
-import { LoginRequest, LoginResponse, JwtPayload } from '@cms/shared'
+import { LoginRequest, LoginResponse, JwtPayload, MultiOrgLoginResponse } from '@cms/shared'
 
 @Injectable()
 export class AuthService {
@@ -13,42 +13,15 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
-  async login(data: LoginRequest): Promise<LoginResponse> {
-    const user = await this.prisma.user.findUnique({
-      where: { email: data.email },
-      include: {
-        organization: { select: { id: true, name: true, modulesEnabled: true } },
-        roles: {
-          include: {
-            role: {
-              include: {
-                permissions: {
-                  include: { permission: true },
-                },
-              },
-            },
-          },
-        },
-      },
-    })
-
-    if (!user || !user.active) {
-      throw new UnauthorizedException('Invalid credentials')
-    }
-
-    const valid = await bcrypt.compare(data.password, user.password)
-    if (!valid) {
-      throw new UnauthorizedException('Invalid credentials')
-    }
-
-    const permissions = user.roles.flatMap((ur) =>
-      ur.role.permissions.map((rp) => ({
+  private async buildLoginResponse(user: any): Promise<LoginResponse> {
+    const permissions = user.roles.flatMap((ur: any) =>
+      ur.role.permissions.map((rp: any) => ({
         resource: rp.permission.resource,
         action: rp.permission.action,
       })),
     )
 
-    const roles = user.roles.map((ur) => ur.role.name)
+    const roles = user.roles.map((ur: any) => ur.role.name)
 
     const payload: JwtPayload = {
       sub: user.id,
@@ -77,11 +50,86 @@ export class AuthService {
     }
   }
 
-  async register(data: { email: string; password: string; name?: string; organizationName: string }) {
-    const existing = await this.prisma.user.findUnique({ where: { email: data.email } })
-    if (existing) {
-      throw new ConflictException('Email already registered')
+  async login(data: LoginRequest): Promise<LoginResponse | MultiOrgLoginResponse> {
+    let users: any[] = []
+
+    if (data.organizationSlug) {
+      users = await this.prisma.user.findMany({
+        where: {
+          email: data.email,
+          organization: { slug: data.organizationSlug },
+          active: true,
+        },
+        include: {
+          organization: { select: { id: true, name: true, modulesEnabled: true, slug: true } },
+          roles: {
+            include: {
+              role: {
+                include: {
+                  permissions: { include: { permission: true } },
+                },
+              },
+            },
+          },
+        },
+      })
+    } else {
+      users = await this.prisma.user.findMany({
+        where: {
+          email: data.email,
+          active: true,
+        },
+        include: {
+          organization: { select: { id: true, name: true, modulesEnabled: true, slug: true } },
+          roles: {
+            include: {
+              role: {
+                include: {
+                  permissions: { include: { permission: true } },
+                },
+              },
+            },
+          },
+        },
+      })
     }
+
+    if (users.length === 0) {
+      throw new UnauthorizedException('Invalid credentials')
+    }
+
+    // If multiple users match and no org specified, ask for org selection
+    if (users.length > 1 && !data.organizationSlug) {
+      return {
+        requireOrganizationSelection: true,
+        organizations: users.map((u) => ({
+          id: u.organization.id,
+          name: u.organization.name,
+          slug: u.organization.slug,
+        })),
+      }
+    }
+
+    // Verify password against the found user(s)
+    let matchedUser: typeof users[0] | null = null
+    for (const user of users) {
+      const valid = await bcrypt.compare(data.password, user.password)
+      if (valid) {
+        matchedUser = user
+        break
+      }
+    }
+
+    if (!matchedUser) {
+      throw new UnauthorizedException('Invalid credentials')
+    }
+
+    return this.buildLoginResponse(matchedUser)
+  }
+
+  async register(data: { email: string; password: string; name?: string; organizationName: string }) {
+    // Note: with multi-tenant email uniqueness, registration creates a new org
+    // so we don't need to check global email uniqueness anymore
 
     const hashed = await bcrypt.hash(data.password, 12)
 
@@ -96,6 +144,7 @@ export class AuthService {
       'catalog', 'orders', 'inventory', 'campaigns',
       'users', 'roles', 'settings', 'media', 'api_keys',
       'content', 'batches', 'reviews', 'customers', 'payments',
+      'drivers', 'returns',
     ]
     const actions = ['create', 'read', 'update', 'delete', 'manage']
 
@@ -142,7 +191,116 @@ export class AuthService {
       },
     })
 
-    return this.login({ email: data.email, password: data.password })
+    return this.login({ email: data.email, password: data.password, organizationSlug: org.slug })
+  }
+
+  async acceptInvitation(token: string, data: { name: string; password: string }) {
+    try {
+      const decoded = this.jwt.verify(token, {
+        secret: this.config.get('JWT_SECRET'),
+      }) as { invitationId: string; email: string; organizationId: string }
+
+      const invitation = await this.prisma.invitation.findFirst({
+        where: {
+          id: decoded.invitationId,
+          token,
+          usedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+        include: { organization: { select: { slug: true } } },
+      })
+
+      if (!invitation) {
+        throw new BadRequestException('Invalid or expired invitation')
+      }
+
+      // Check if user already exists in this org
+      const existingUser = await this.prisma.user.findUnique({
+        where: {
+          email_organizationId: {
+            email: invitation.email,
+            organizationId: invitation.organizationId,
+          },
+        },
+      })
+
+      if (existingUser) {
+        throw new ConflictException('User already exists in this organization')
+      }
+
+      const hashed = await bcrypt.hash(data.password, 12)
+
+      const user = await this.prisma.user.create({
+        data: {
+          email: invitation.email,
+          password: hashed,
+          name: data.name || invitation.name,
+          organizationId: invitation.organizationId,
+          modulesEnabled: invitation.modulesEnabled,
+          invitedBy: invitation.invitedBy,
+        },
+      })
+
+      // Assign roles
+      if (invitation.roleIds.length > 0) {
+        await this.prisma.userRole.createMany({
+          data: invitation.roleIds.map((roleId) => ({
+            userId: user.id,
+            roleId,
+          })),
+          skipDuplicates: true,
+        })
+      }
+
+      // Mark invitation as used
+      await this.prisma.invitation.update({
+        where: { id: invitation.id },
+        data: { usedAt: new Date() },
+      })
+
+      return this.login({
+        email: user.email,
+        password: data.password,
+        organizationSlug: invitation.organization.slug,
+      })
+    } catch (err) {
+      if (err instanceof BadRequestException || err instanceof ConflictException) {
+        throw err
+      }
+      throw new BadRequestException('Invalid or expired invitation')
+    }
+  }
+
+  async validateInvitationToken(token: string) {
+    try {
+      const decoded = this.jwt.verify(token, {
+        secret: this.config.get('JWT_SECRET'),
+      }) as { invitationId: string; email: string; organizationId: string }
+
+      const invitation = await this.prisma.invitation.findFirst({
+        where: {
+          id: decoded.invitationId,
+          token,
+          usedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+        include: {
+          organization: { select: { id: true, name: true, slug: true } },
+        },
+      })
+
+      if (!invitation) {
+        throw new BadRequestException('Invalid or expired invitation')
+      }
+
+      return {
+        email: invitation.email,
+        organizationName: invitation.organization.name,
+        organizationSlug: invitation.organization.slug,
+      }
+    } catch {
+      throw new BadRequestException('Invalid or expired invitation')
+    }
   }
 
   async getProfile(userId: string) {

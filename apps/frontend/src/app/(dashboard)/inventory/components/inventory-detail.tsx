@@ -1,6 +1,7 @@
 'use client'
 
 import { Icon } from '@iconify/react'
+import { useTranslation } from '@/i18n/use-translation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +14,7 @@ function formatDate(d?: string | null) {
 }
 
 export function InventoryDetail() {
+  const { t } = useTranslation()
   const selectedItem = useInventoryStore((s) => s.selectedItem)
   const batches = useInventoryStore((s) => s.batches)
   const movements = useInventoryStore((s) => s.movements)
@@ -29,25 +31,25 @@ export function InventoryDetail() {
         </DialogHeader>
 
         {detailLoading ? (
-          <div className="py-8 text-center text-muted-foreground">Cargando...</div>
+          <div className="py-8 text-center text-muted-foreground">{t('loading')}</div>
         ) : (
           <div className="space-y-6 pt-2">
             <div className="flex gap-3">
               <Card className="flex-1 border-0 bg-muted/40">
                 <CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Stock total</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('inventory_stock_total')}</p>
                   <p className="text-2xl font-medium mt-1">{selectedItem?.quantity}</p>
                 </CardContent>
               </Card>
               <Card className="flex-1 border-0 bg-muted/40">
                 <CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Lotes</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('inventory_batches')}</p>
                   <p className="text-2xl font-medium mt-1">{batches.length}</p>
                 </CardContent>
               </Card>
               <Card className="flex-1 border-0 bg-muted/40">
                 <CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Movimientos</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('inventory_movements')}</p>
                   <p className="text-2xl font-medium mt-1">{movements.length}</p>
                 </CardContent>
               </Card>
@@ -55,14 +57,14 @@ export function InventoryDetail() {
 
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium">Lotes</h3>
+                <h3 className="text-sm font-medium">{t('inventory_batches')}</h3>
                 <Button size="sm" onClick={() => setBatchFormOpen(true)}>
                   <Icon icon="lucide:plus" className="h-4 w-4 mr-1" />
-                  Agregar lote
+                  {t('inventory_add_batch')}
                 </Button>
               </div>
               {batches.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">No hay lotes registrados</p>
+                <p className="text-sm text-muted-foreground py-4 text-center">{t('inventory_no_batches')}</p>
               ) : (
                 <div className="space-y-2">
                   {batches.map((batch) => (
@@ -72,15 +74,15 @@ export function InventoryDetail() {
                           <span className="text-sm font-medium">{batch.batchNumber}</span>
                           {batch.expiresAt && new Date(batch.expiresAt) < new Date(Date.now() + 30 * 86400000) && (
                             <Badge variant="secondary" className="text-[10px] bg-red-500/15 text-red-500 border-0">
-                              Próximo a vencer
+                              {t('inventory_expiring_soon')}
                             </Badge>
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {batch.remainingQuantity} / {batch.quantity} unidades
+                          {batch.remainingQuantity} / {batch.quantity} {t('inventory_units')}
                           {batch.costPerUnit ? ` · $${batch.costPerUnit}/u` : ''}
                           {batch.supplier ? ` · ${batch.supplier}` : ''}
-                          {' · Vence: '}{formatDate(batch.expiresAt)}
+                          {' · '}{t('inventory_expires')}: {formatDate(batch.expiresAt)}
                         </p>
                       </div>
                       <p className="text-xs text-muted-foreground">{formatDate(batch.receivedAt)}</p>
@@ -91,9 +93,9 @@ export function InventoryDetail() {
             </div>
 
             <div>
-              <h3 className="text-sm font-medium mb-3">Historial de movimientos</h3>
+              <h3 className="text-sm font-medium mb-3">{t('inventory_movement_history')}</h3>
               {movements.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">No hay movimientos</p>
+                <p className="text-sm text-muted-foreground py-4 text-center">{t('inventory_no_movements')}</p>
               ) : (
                 <div className="space-y-2">
                   {movements.map((m) => (
@@ -112,10 +114,10 @@ export function InventoryDetail() {
                         </div>
                         <div>
                           <p className="text-sm">
-                            {m.type === 'IN' ? 'Entrada' : m.type === 'OUT' ? 'Salida' : 'Ajuste'}
-                            {' '}<span className="font-medium">{m.quantity}</span> unidades
+                            {m.type === 'IN' ? t('inventory_movement_in') : m.type === 'OUT' ? t('inventory_movement_out') : t('inventory_movement_adjustment')}
+                            {' '}<span className="font-medium">{m.quantity}</span> {t('inventory_units')}
                           </p>
-                          <p className="text-xs text-muted-foreground">{m.reason || 'Sin motivo'}</p>
+                          <p className="text-xs text-muted-foreground">{m.reason || t('inventory_no_reason')}</p>
                         </div>
                       </div>
                       <p className="text-xs text-muted-foreground">{formatDate(m.createdAt)}</p>

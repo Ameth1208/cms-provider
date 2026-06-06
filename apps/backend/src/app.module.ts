@@ -18,6 +18,13 @@ import { ReviewsModule } from './modules/reviews/reviews.module'
 import { ContentModule } from './modules/content/content.module'
 import { AdminModule } from './modules/admin/admin.module'
 import { StorageModule } from './common/storage/storage.module'
+import { DriversModule } from './modules/drivers/drivers.module'
+import { DeliveriesModule } from './modules/deliveries/deliveries.module'
+import { DeliveryZonesModule } from './modules/delivery-zones/delivery-zones.module'
+import { DeliveryRoutesModule } from './modules/delivery-routes/delivery-routes.module'
+import { LocationsModule } from './modules/locations/locations.module'
+import { ReturnsModule } from './modules/returns/returns.module'
+import { InvitationsModule } from './modules/invitations/invitations.module'
 
 @Module({
   imports: [
@@ -43,6 +50,13 @@ import { StorageModule } from './common/storage/storage.module'
     ReviewsModule,
     ContentModule,
     AdminModule,
+    DriversModule,
+    DeliveriesModule,
+    DeliveryZonesModule,
+    DeliveryRoutesModule,
+    LocationsModule,
+    ReturnsModule,
+    InvitationsModule,
   ],
 })
 export class AppModule {}

@@ -57,15 +57,20 @@ export function useUsers() {
   const createUser = useCallback(async () => {
     const state = useUsersStore.getState()
     if (!token || !state.formEmail.trim()) return
-    const tempPassword = Math.random().toString(36).slice(2, 14) + Math.random().toString(36).slice(2, 14)
-    await api.post('/users', {
+    const result = await api.post<{
+      id: string
+      email: string
+      token: string
+      invitationUrl: string
+      expiresAt: string
+    }>('/invitations', {
       email: state.formEmail.trim(),
-      password: tempPassword,
       name: state.formName.trim() || undefined,
       roleIds: state.formRoleIds,
       modulesEnabled: state.formModulesEnabled,
     }, token)
     fetchUsers()
+    return result
   }, [token, fetchUsers])
 
   const updateUser = useCallback(async () => {

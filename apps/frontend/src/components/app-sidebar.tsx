@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { Icon } from '@iconify/react'
 import { useTheme } from 'next-themes'
-import { useLocaleStore } from '@/store'
+import { useLocaleStore, useSettingsStore, useNotificationsStore } from '@/store'
 import { useTranslation } from '@/i18n/use-translation'
 import { useState, useEffect } from 'react'
 import {
@@ -84,11 +84,19 @@ function SidebarTooltip({ label, children }: { label: string; children: React.Re
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const { user, logout } = useAuth()
+  const { user, logout, token } = useAuth()
   const { theme, setTheme } = useTheme()
   const { locale, setLocale } = useLocaleStore()
   const { t } = useTranslation()
   const { collapsed, toggle } = useSidebarCollapse()
+  const { settings, fetchSettings } = useSettingsStore()
+  const { unreadCount } = useNotificationsStore()
+
+  useEffect(() => {
+    if (token && !settings.companyName) {
+      fetchSettings(token)
+    }
+  }, [token, settings.companyName, fetchSettings])
 
   const [openItems, setOpenItems] = useState<Set<string>>(new Set(['catalog']))
 
@@ -103,54 +111,75 @@ export function AppSidebar() {
 
   const initials = user?.email?.charAt(0).toUpperCase() || 'U'
 
-  const navGroups: NavGroup[] = [
-    {
-      items: [
-        { href: '/', labelKey: 'home', icon: 'lucide:layout-dashboard', module: 'dashboard' },
-      ],
-    },
-    {
-      label: 'Negocio',
-      items: [
+  const isDriver = user?.roles?.includes('DRIVER')
+
+  const navGroups: NavGroup[] = isDriver
+    ? [
         {
-          labelKey: 'catalog',
-          icon: 'lucide:package',
-          module: 'catalog',
-          children: [
-            { href: '/catalog', labelKey: 'catalog_items' },
-            { href: '/catalog/categories', labelKey: 'catalog_categories' },
-            { href: '/catalog/tags', labelKey: 'catalog_tags' },
+          items: [
+            { href: '/driver-dashboard', labelKey: 'driver_dashboard', icon: 'lucide:truck', module: 'drivers' },
           ],
         },
-        { href: '/customers', labelKey: 'customers', icon: 'lucide:users', module: 'customers' },
-        { href: '/orders', labelKey: 'orders', icon: 'lucide:shopping-cart', badge: 0, module: 'orders' },
-        { href: '/payments', labelKey: 'payments', icon: 'lucide:credit-card', module: 'orders' },
-        { href: '/inventory', labelKey: 'inventory', icon: 'lucide:warehouse', module: 'inventory' },
-        { href: '/campaigns', labelKey: 'campaigns', icon: 'lucide:tag', module: 'campaigns' },
-        { href: '/content', labelKey: 'content', icon: 'lucide:layout-template', module: 'content' },
-      ],
-    },
-    {
-      label: 'Equipo',
-      items: [
-        { href: '/users', labelKey: 'users', icon: 'lucide:users', module: 'users' },
-      ],
-    },
-    {
-      label: 'Configuración',
-      items: [
+      ]
+    : [
         {
-          labelKey: 'settings',
-          icon: 'lucide:settings',
-          module: 'settings',
-          children: [
-            { href: '/settings', labelKey: 'general' },
-            { href: '/settings/api-keys', labelKey: 'api_keys' },
+          items: [
+            { href: '/', labelKey: 'home', icon: 'lucide:layout-dashboard', module: 'dashboard' },
           ],
         },
-      ],
-    },
-  ]
+        {
+          label: t('nav_business'),
+          items: [
+            {
+              labelKey: 'catalog',
+              icon: 'lucide:package',
+              module: 'catalog',
+              children: [
+                { href: '/catalog', labelKey: 'catalog_items' },
+                { href: '/catalog/categories', labelKey: 'catalog_categories' },
+                { href: '/catalog/tags', labelKey: 'catalog_tags' },
+              ],
+            },
+            { href: '/customers', labelKey: 'customers', icon: 'lucide:users', module: 'customers' },
+            { href: '/orders', labelKey: 'orders', icon: 'lucide:shopping-cart', badge: unreadCount, module: 'orders' },
+            { href: '/payments', labelKey: 'payments', icon: 'lucide:credit-card', module: 'orders' },
+            { href: '/inventory', labelKey: 'inventory', icon: 'lucide:warehouse', module: 'inventory' },
+            { href: '/campaigns', labelKey: 'campaigns', icon: 'lucide:tag', module: 'campaigns' },
+            { href: '/content', labelKey: 'content', icon: 'lucide:layout-template', module: 'content' },
+            { href: '/locations', labelKey: 'locations', icon: 'lucide:map-pin', module: 'locations' },
+          ],
+        },
+        {
+          label: t('nav_logistics'),
+          items: [
+            { href: '/drivers', labelKey: 'drivers', icon: 'lucide:truck', module: 'drivers' },
+            { href: '/zones', labelKey: 'zones_title', icon: 'lucide:map', module: 'drivers' },
+            { href: '/routes', labelKey: 'routes_title', icon: 'lucide:route', module: 'drivers' },
+            { href: '/returns', labelKey: 'returns', icon: 'lucide:refresh-ccw', module: 'drivers' },
+            { href: '/reports', labelKey: 'reports', icon: 'lucide:bar-chart-3', module: 'drivers' },
+          ],
+        },
+        {
+          label: t('nav_team'),
+          items: [
+            { href: '/users', labelKey: 'users', icon: 'lucide:users', module: 'users' },
+          ],
+        },
+        {
+          label: t('nav_settings'),
+          items: [
+            {
+              labelKey: 'settings',
+              icon: 'lucide:settings',
+              module: 'settings',
+              children: [
+                { href: '/settings', labelKey: 'general' },
+                { href: '/settings/api-keys', labelKey: 'api_keys' },
+              ],
+            },
+          ],
+        },
+      ]
 
   /* Módulos que existen en código pero aún no están listos para producción. */
   const DISABLED_MODULES: string[] = []
@@ -286,12 +315,20 @@ export function AppSidebar() {
             href="/"
             className={`flex items-center gap-2.5 min-w-0 ${collapsed ? 'justify-center w-full' : ''}`}
           >
-            <div className="h-7 w-7 rounded-md bg-foreground flex items-center justify-center shrink-0">
-              <Icon icon="lucide:hexagon" className="h-4 w-4 text-background" />
-            </div>
+            {settings.logoUrl ? (
+              <img 
+                src={settings.logoUrl} 
+                alt={settings.companyName || 'Logo'} 
+                className="h-7 w-7 object-contain rounded-md shrink-0"
+              />
+            ) : (
+              <div className="h-7 w-7 rounded-md bg-foreground flex items-center justify-center shrink-0">
+                <Icon icon="lucide:hexagon" className="h-4 w-4 text-background" />
+              </div>
+            )}
             {!collapsed && (
               <span className="text-[14px] font-medium tracking-tight text-foreground truncate">
-                {user?.organizationName || 'CMS'}
+                {settings.companyName || user?.organizationName || 'CMS'}
               </span>
             )}
           </Link>
@@ -330,7 +367,7 @@ export function AppSidebar() {
           <div className="shrink-0 px-2.5 pb-2">
             {!collapsed && (
               <p className="px-2.5 py-1 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-                Administración
+                {t('nav_admin')}
               </p>
             )}
             <Link

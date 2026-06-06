@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PhoneInput } from '@/components/ui/phone-input'
 import {
   Dialog,
   DialogContent,
@@ -20,6 +21,7 @@ export function CustomerCreateDialog() {
     formName,
     formEmail,
     formPhone,
+    formPhoneCountry,
     formDocument,
     formDocumentType,
     formNotes,
@@ -27,6 +29,7 @@ export function CustomerCreateDialog() {
     setFormName,
     setFormEmail,
     setFormPhone,
+    setFormPhoneCountry,
     setFormDocument,
     setFormDocumentType,
     setFormNotes,
@@ -71,10 +74,11 @@ export function CustomerCreateDialog() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>{t('customers_phone')}</Label>
-              <Input
+              <PhoneInput
                 value={formPhone}
-                onChange={(e) => setFormPhone(e.target.value)}
-                placeholder="+54 11 1234-5678"
+                country={formPhoneCountry}
+                onChange={setFormPhone}
+                onCountryChange={setFormPhoneCountry}
               />
             </div>
             <div className="space-y-2">

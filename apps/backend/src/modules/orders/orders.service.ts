@@ -60,7 +60,15 @@ export class OrdersService {
         shippingMethod: true,
         payments: {
           orderBy: { createdAt: 'desc' }
-        }
+        },
+        driver: true,
+        delivery: {
+          include: {
+            trackingEvents: {
+              orderBy: { timestamp: 'desc' },
+            },
+          },
+        },
       },
     })
     if (!order) throw new NotFoundException('Order not found')
@@ -328,6 +336,50 @@ export class OrdersService {
       where: { id },
       data: { subtotal, total },
       include: { items: true }
+    })
+
+    this.gateway.emitOrderStatus(updated)
+    return updated
+  }
+
+  async assignDriver(id: string, driverId: string, organizationId: string) {
+    const order = await this.prisma.order.findFirst({
+      where: { id, organizationId },
+    })
+    if (!order) throw new NotFoundException('Order not found')
+
+    const driver = await this.prisma.driver.findFirst({
+      where: { id: driverId, organizationId },
+    })
+    if (!driver) throw new NotFoundException('Driver not found')
+
+    const updated = await this.prisma.order.update({
+      where: { id },
+      data: { driverId },
+      include: {
+        items: true,
+        driver: true,
+        customer: true,
+      },
+    })
+
+    this.gateway.emitOrderStatus(updated)
+    return updated
+  }
+
+  async unassignDriver(id: string, organizationId: string) {
+    const order = await this.prisma.order.findFirst({
+      where: { id, organizationId },
+    })
+    if (!order) throw new NotFoundException('Order not found')
+
+    const updated = await this.prisma.order.update({
+      where: { id },
+      data: { driverId: null },
+      include: {
+        items: true,
+        customer: true,
+      },
     })
 
     this.gateway.emitOrderStatus(updated)

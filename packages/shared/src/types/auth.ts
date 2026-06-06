@@ -1,12 +1,22 @@
 export interface LoginRequest {
   email: string
   password: string
+  organizationSlug?: string
 }
 
 export interface LoginResponse {
   accessToken: string
   refreshToken: string
   user: AuthUser
+}
+
+export interface MultiOrgLoginResponse {
+  requireOrganizationSelection: true
+  organizations: {
+    id: string
+    name: string
+    slug: string
+  }[]
 }
 
 export interface AuthUser {

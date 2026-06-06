@@ -63,6 +63,7 @@ export class CompanySettingsService {
     const validModules = [
       'catalog', 'inventory', 'orders', 'campaigns',
       'content', 'users', 'apiKeys', 'reviews', 'settings',
+      'drivers', 'returns',
     ]
     const filtered = modules.filter((m) => validModules.includes(m))
 

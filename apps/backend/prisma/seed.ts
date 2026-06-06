@@ -1,7 +1,12 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
+import bcrypt from 'bcryptjs'
 import { URL } from 'node:url'
+import { config } from 'dotenv'
+import path from 'node:path'
+
+config({ path: path.resolve(__dirname, '../../../.env') })
 
 function parseDatabaseUrl(urlString: string) {
   const url = new URL(urlString)
@@ -19,427 +24,296 @@ const pool = new Pool(dbConfig)
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 
-const organizationId = 'cmpljeonl0000agw6tbguv6af'
-
-const categories = [
-  { name: 'Ropa Casual', slug: 'ropa-casual' },
-  { name: 'Ropa Deportiva', slug: 'ropa-deportiva' },
-  { name: 'Accesorios', slug: 'accesorios' },
-  { name: 'Calzado', slug: 'calzado' },
-  { name: 'Hogar', slug: 'hogar' },
-  { name: 'Tecnología', slug: 'tecnologia' },
-]
-
-const shippingMethods = [
-  { name: 'Envío Estándar', description: 'Entrega en 3-5 días hábiles', price: 15000, estimatedDays: 5 },
-  { name: 'Envío Express', description: 'Entrega en 1-2 días hábiles', price: 35000, estimatedDays: 2 },
-  { name: 'Recogida en Tienda', description: 'Disponible en 24 horas', price: 0, estimatedDays: 1 },
-  { name: 'Envío Same-Day', description: 'Entrega el mismo día (solo Barranquilla)', price: 25000, estimatedDays: 1 },
-]
-
-// Productos con contexto colombiano/barranquillero
-const products = [
-  {
-    name: 'Camiseta Clásica Barranquilla',
-    slug: 'camiseta-clasica-barranquilla',
-    description: 'Camiseta 100% algodón con diseño inspirado en la ventana de Barranquilla. Perfecta para el clima tropical caribeño.',
-    price: 89900,
-    type: 'PRODUCT',
-    sku: 'CBB-001',
-    categorySlug: 'ropa-casual',
-    featured: true,
-    label: 'Más Vendido',
-  },
-  {
-    name: 'Vestido Playero Floral',
-    slug: 'vestido-playero-floral',
-    description: 'Vestido ligero con estampado floral ideal para la playa o paseos por el malecón. Tela fresca y transpirable.',
-    price: 159900,
-    type: 'PRODUCT',
-    sku: 'VPF-002',
-    categorySlug: 'ropa-casual',
-    featured: true,
-    label: 'Nuevo',
-  },
-  {
-    name: 'Short Deportivo Running',
-    slug: 'short-deportivo-running',
-    description: 'Short ligero con tecnología Dry-Fit. Ideal para correr por la ciclovía de la 84 o ejercitarse al aire libre.',
-    price: 79900,
-    type: 'PRODUCT',
-    sku: 'SDR-003',
-    categorySlug: 'ropa-deportiva',
-    featured: false,
-  },
-  {
-    name: 'Leggings Fitness Premium',
-    slug: 'leggings-fitness-premium',
-    description: 'Leggings de alta compresión con bolsillo lateral. Perfecto para el gimnasio o clases de yoga.',
-    price: 119900,
-    type: 'PRODUCT',
-    sku: 'LFP-004',
-    categorySlug: 'ropa-deportiva',
-    featured: true,
-  },
-  {
-    name: 'Gorra Trucker Carnaval',
-    slug: 'gorra-trucker-carnaval',
-    description: 'Gorra estilo trucker con malla trasera. Diseño exclusivo inspirado en el Carnaval de Barranquilla.',
-    price: 49900,
-    type: 'PRODUCT',
-    sku: 'GTC-005',
-    categorySlug: 'accesorios',
-    featured: true,
-    label: 'Edición Limitada',
-  },
-  {
-    name: 'Bolso Playero Grande',
-    slug: 'bolso-playero-grande',
-    description: 'Bolso espacioso con compartimento impermeable. Ideal para días de playa en Puerto Velero o Santa Verónica.',
-    price: 129900,
-    type: 'PRODUCT',
-    sku: 'BPG-006',
-    categorySlug: 'accesorios',
-    featured: false,
-  },
-  {
-    name: 'Sandalias Huarache',
-    slug: 'sandalias-huarache',
-    description: 'Sandalias artesanales estilo huarache. Cómodas y frescas para el clima cálido de la costa caribe.',
-    price: 99900,
-    type: 'PRODUCT',
-    sku: 'SH-007',
-    categorySlug: 'calzado',
-    featured: true,
-  },
-  {
-    name: 'Tennis Running Air',
-    slug: 'tennis-running-air',
-    description: 'Tennis con tecnología de amortiguación. Perfectos para correr por el parque de la 93 o la ciclovía.',
-    price: 289900,
-    type: 'PRODUCT',
-    sku: 'TRA-008',
-    categorySlug: 'calzado',
-    featured: true,
-    label: 'Top Rated',
-  },
-  {
-    name: 'Hamaca Caribeña',
-    slug: 'hamaca-caribena',
-    description: 'Hamaca tejida a mano en algodón. Ideal para descansar en el patio o terraza con la brisa del mar.',
-    price: 189900,
-    type: 'PRODUCT',
-    sku: 'HC-009',
-    categorySlug: 'hogar',
-    featured: true,
-  },
-  {
-    name: 'Set de Cojines Tropicales',
-    slug: 'set-cojines-tropicales',
-    description: 'Set de 3 cojines con estampados tropicales. Añade color y estilo caribeño a tu sala.',
-    price: 139900,
-    type: 'PRODUCT',
-    sku: 'SCT-010',
-    categorySlug: 'hogar',
-    featured: false,
-  },
-  {
-    name: 'Audífonos Bluetooth Pro',
-    slug: 'audifonos-bluetooth-pro',
-    description: 'Audífonos inalámbricos con cancelación de ruido. Perfectos para entrenar o trabajar desde casa.',
-    price: 249900,
-    type: 'PRODUCT',
-    sku: 'ABP-011',
-    categorySlug: 'tecnologia',
-    featured: true,
-    label: 'Nuevo',
-  },
-  {
-    name: 'Power Bank Solar',
-    slug: 'power-bank-solar',
-    description: 'Cargador portátil con panel solar. Ideal para días de playa o camping en la región caribe.',
-    price: 179900,
-    type: 'PRODUCT',
-    sku: 'PBS-012',
-    categorySlug: 'tecnologia',
-    featured: false,
-  },
-  {
-    name: 'Camisa Guayabera Premium',
-    slug: 'camisa-guayabera-premium',
-    description: 'Camisa guayabera 100% lino. Elegante y fresca, perfecta para eventos formales en el clima tropical.',
-    price: 199900,
-    type: 'PRODUCT',
-    sku: 'CGP-013',
-    categorySlug: 'ropa-casual',
-    featured: true,
-  },
-  {
-    name: 'Bañador Tropical',
-    slug: 'banador-tropical',
-    description: 'Bañador con estampado tropical. Secado rápido ideal para playas del Caribe colombiano.',
-    price: 89900,
-    type: 'PRODUCT',
-    sku: 'BT-014',
-    categorySlug: 'ropa-casual',
-    featured: false,
-  },
-  {
-    name: 'Mochila Antirrobo',
-    slug: 'mochila-antirrobo',
-    description: 'Mochila con compartimentos ocultos y puerto USB. Perfecta para moverse seguro por la ciudad.',
-    price: 159900,
-    type: 'PRODUCT',
-    sku: 'MA-015',
-    categorySlug: 'accesorios',
-    featured: true,
-  },
-]
-
-// Clientes con ubicaciones al norte de Barranquilla
-const customers = [
-  {
-    name: 'María Fernanda López',
-    email: 'mafer.lopez@email.com',
-    phone: '+57 300 123 4567',
-    document: '1.045.678.901',
-    documentType: 'CC',
-    addresses: [
-      {
-        label: 'Casa',
-        street: 'Cra 53 # 82 - 120, Edificio Riomar Plaza, Apto 402',
-        city: 'Barranquilla',
-        state: 'Atlántico',
-        zip: '080020',
-        country: 'CO',
-        isDefault: true,
-      },
-      {
-        label: 'Oficina',
-        street: 'Calle 84 # 51 - 100, Centro Empresarial Villa Campestre, Oficina 301',
-        city: 'Barranquilla',
-        state: 'Atlántico',
-        zip: '080020',
-        country: 'CO',
-        isDefault: false,
-      },
-    ],
-  },
-  {
-    name: 'Carlos Andrés Martínez',
-    email: 'carlos.martinez@email.com',
-    phone: '+57 315 234 5678',
-    document: '1.098.765.432',
-    documentType: 'CC',
-    addresses: [
-      {
-        label: 'Casa',
-        street: 'Carrera 57 # 90 - 45, Urbanización Altos de Riomar, Casa 12',
-        city: 'Barranquilla',
-        state: 'Atlántico',
-        zip: '080020',
-        country: 'CO',
-        isDefault: true,
-      },
-    ],
-  },
-  {
-    name: 'Ana Patricia Gómez',
-    email: 'ana.gomez@email.com',
-    phone: '+57 301 345 6789',
-    document: '52.678.901',
-    documentType: 'CE',
-    addresses: [
-      {
-        label: 'Apartamento',
-        street: 'Calle 85 # 53 - 200, Conjunto Residencial Buenavista, Torre 2, Apto 1503',
-        city: 'Barranquilla',
-        state: 'Atlántico',
-        zip: '080020',
-        country: 'CO',
-        isDefault: true,
-      },
-      {
-        label: 'Trabajo',
-        street: 'Vía 40 # 73 - 280, Centro Comercial Viva Barranquilla, Local 45',
-        city: 'Barranquilla',
-        state: 'Atlántico',
-        zip: '080020',
-        country: 'CO',
-        isDefault: false,
-      },
-    ],
-  },
-  {
-    name: 'José Miguel Rodríguez',
-    email: 'jose.rodriguez@email.com',
-    phone: '+57 304 456 7890',
-    document: '79.123.456',
-    documentType: 'NIT',
-    addresses: [
-      {
-        label: 'Empresa',
-        street: 'Carrera 52 # 80 - 150, Edificio Ciudad Jardín, Oficina 505',
-        city: 'Barranquilla',
-        state: 'Atlántico',
-        zip: '080020',
-        country: 'CO',
-        isDefault: true,
-      },
-    ],
-  },
-  {
-    name: 'Laura Cristina Vargas',
-    email: 'laura.vargas@email.com',
-    phone: '+57 310 567 8901',
-    document: '1.123.456.789',
-    documentType: 'CC',
-    addresses: [
-      {
-        label: 'Casa',
-        street: 'Calle 96 # 49 - 300, Conjunto Residencial La Castellana, Casa 28',
-        city: 'Barranquilla',
-        state: 'Atlántico',
-        zip: '080020',
-        country: 'CO',
-        isDefault: true,
-      },
-    ],
-  },
-  {
-    name: 'Luis Eduardo Pérez',
-    email: 'luis.perez@email.com',
-    phone: '+57 317 678 9012',
-    document: '1.234.567.890',
-    documentType: 'CC',
-    addresses: [
-      {
-        label: 'Casa Principal',
-        street: 'Carrera 47 # 82 - 60, Urbanización Villa Country, Casa 45',
-        city: 'Barranquilla',
-        state: 'Atlántico',
-        zip: '080020',
-        country: 'CO',
-        isDefault: true,
-      },
-      {
-        label: 'Casa Playa',
-        street: 'Km 8 Vía al Mar, Condominio Villa del Este, Casa 12',
-        city: 'Puerto Colombia',
-        state: 'Atlántico',
-        zip: '081008',
-        country: 'CO',
-        isDefault: false,
-      },
-    ],
-  },
-]
-
 async function main() {
-  console.log('🌱 Iniciando seed de datos para Barranquilla...')
+  console.log('🌱 Seeding database...')
 
-  // Crear categorías
-  console.log('📁 Creando categorías...')
-  const createdCategories: Record<string, string> = {}
-  for (const cat of categories) {
-    const existing = await prisma.category.findUnique({
-      where: { slug_organizationId: { slug: cat.slug, organizationId } }
-    })
-    if (!existing) {
-      const created = await prisma.category.create({
-        data: { ...cat, organizationId }
+  // Create organization
+  const org = await prisma.organization.create({
+    data: {
+      name: 'Demo Store',
+      slug: 'demo-store',
+    },
+  })
+  console.log('✓ Organization created')
+
+  // Create owner user
+  const hashedPassword = await bcrypt.hash('Admin123!', 12)
+  const owner = await prisma.user.create({
+    data: {
+      email: 'admin@demo.com',
+      password: hashedPassword,
+      name: 'Admin',
+      organizationId: org.id,
+    },
+  })
+  console.log('✓ Owner user created')
+
+  // Create OWNER role with all permissions
+  const resources = [
+    'catalog', 'orders', 'inventory', 'campaigns',
+    'users', 'roles', 'settings', 'media', 'api_keys',
+    'content', 'batches', 'reviews', 'customers', 'payments',
+    'drivers', 'returns',
+  ]
+  const actions = ['create', 'read', 'update', 'delete', 'manage']
+
+  const permissionIds: string[] = []
+  for (const resource of resources) {
+    for (const action of actions) {
+      const permission = await prisma.permission.upsert({
+        where: { resource_action: { resource, action } },
+        create: { resource, action, name: `${action} ${resource}` },
+        update: {},
       })
-      createdCategories[cat.slug] = created.id
-      console.log(`  ✅ ${cat.name}`)
-    } else {
-      createdCategories[cat.slug] = existing.id
-      console.log(`  ℹ️  ${cat.name} (ya existe)`)
+      permissionIds.push(permission.id)
     }
   }
 
-  // Crear métodos de envío
-  console.log('🚚 Creando métodos de envío...')
-  for (const method of shippingMethods) {
-    const existing = await prisma.shippingMethod.findFirst({
-      where: { name: method.name, organizationId }
-    })
-    if (!existing) {
-      await prisma.shippingMethod.create({
-        data: { ...method, organizationId }
-      })
-      console.log(`  ✅ ${method.name}`)
-    } else {
-      console.log(`  ℹ️  ${method.name} (ya existe)`)
-    }
-  }
+  const ownerRole = await prisma.role.create({
+    data: {
+      name: 'OWNER',
+      description: 'Dueño del negocio. Control total.',
+      organizationId: org.id,
+    },
+  })
 
-  // Crear productos
-  console.log('📦 Creando productos...')
+  await prisma.rolePermission.createMany({
+    data: permissionIds.map((permissionId) => ({ roleId: ownerRole.id, permissionId })),
+    skipDuplicates: true,
+  })
+
+  await prisma.userRole.create({
+    data: {
+      userId: owner.id,
+      roleId: ownerRole.id,
+    },
+  })
+  console.log('✓ OWNER role with permissions created')
+
+  // Create categories
+  const categories = await Promise.all([
+    prisma.category.create({ data: { name: 'Electronics', slug: 'electronics', organizationId: org.id } }),
+    prisma.category.create({ data: { name: 'Clothing', slug: 'clothing', organizationId: org.id } }),
+    prisma.category.create({ data: { name: 'Sports', slug: 'sports', organizationId: org.id } }),
+    prisma.category.create({ data: { name: 'Home', slug: 'home', organizationId: org.id } }),
+    prisma.category.create({ data: { name: 'Books', slug: 'books', organizationId: org.id } }),
+  ])
+  console.log('✓ Categories created')
+
+  // Create tags
+  const tags = await Promise.all([
+    prisma.tag.create({ data: { name: 'New', slug: 'new', organizationId: org.id } }),
+    prisma.tag.create({ data: { name: 'Sale', slug: 'sale', organizationId: org.id } }),
+    prisma.tag.create({ data: { name: 'Popular', slug: 'popular', organizationId: org.id } }),
+    prisma.tag.create({ data: { name: 'Featured', slug: 'featured', organizationId: org.id } }),
+    prisma.tag.create({ data: { name: 'Limited', slug: 'limited', organizationId: org.id } }),
+  ])
+  console.log('✓ Tags created')
+
+  // Create products
+  const products = await Promise.all([
+    prisma.catalogItem.create({
+      data: {
+        name: 'Wireless Headphones',
+        slug: 'wireless-headphones',
+        description: 'High-quality wireless headphones with noise cancellation',
+        price: 89.99,
+        comparePrice: 129.99,
+        type: 'PRODUCT',
+        sku: 'ELEC-001',
+        organizationId: org.id,
+        categoryId: categories[0].id,
+      },
+    }),
+    prisma.catalogItem.create({
+      data: {
+        name: 'Running Shoes',
+        slug: 'running-shoes',
+        description: 'Professional running shoes for athletes',
+        price: 119.99,
+        type: 'PRODUCT',
+        sku: 'SPORT-001',
+        organizationId: org.id,
+        categoryId: categories[2].id,
+      },
+    }),
+    prisma.catalogItem.create({
+      data: {
+        name: 'Cotton T-Shirt',
+        slug: 'cotton-t-shirt',
+        description: 'Premium cotton t-shirt',
+        price: 29.99,
+        type: 'PRODUCT',
+        sku: 'CLOTH-001',
+        organizationId: org.id,
+        categoryId: categories[1].id,
+      },
+    }),
+    prisma.catalogItem.create({
+      data: {
+        name: 'Coffee Maker',
+        slug: 'coffee-maker',
+        description: 'Automatic coffee maker with timer',
+        price: 79.99,
+        type: 'PRODUCT',
+        sku: 'HOME-001',
+        organizationId: org.id,
+        categoryId: categories[3].id,
+      },
+    }),
+    prisma.catalogItem.create({
+      data: {
+        name: 'Programming Book',
+        slug: 'programming-book',
+        description: 'Learn modern web development',
+        price: 49.99,
+        type: 'PRODUCT',
+        sku: 'BOOK-001',
+        organizationId: org.id,
+        categoryId: categories[4].id,
+      },
+    }),
+  ])
+  // Add media to first 3 products
+  await Promise.all([
+    prisma.media.create({
+      data: {
+        url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400',
+        type: 'IMAGE',
+        alt: 'Wireless Headphones',
+        catalogItemId: products[0].id,
+      },
+    }),
+    prisma.media.create({
+      data: {
+        url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400',
+        type: 'IMAGE',
+        alt: 'Running Shoes',
+        catalogItemId: products[1].id,
+      },
+    }),
+    prisma.media.create({
+      data: {
+        url: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400',
+        type: 'IMAGE',
+        alt: 'Cotton T-Shirt',
+        catalogItemId: products[2].id,
+      },
+    }),
+  ])
+  console.log('✓ Product images created')
+
+  console.log('✓ Products created')
+
+  // Create customers
+  const customers = await Promise.all([
+    prisma.customer.create({ data: { name: 'John Smith', email: 'john@demo.com', phone: '+1-555-0101', organizationId: org.id } }),
+    prisma.customer.create({ data: { name: 'Maria Garcia', email: 'maria@demo.com', phone: '+1-555-0102', organizationId: org.id } }),
+    prisma.customer.create({ data: { name: 'David Johnson', email: 'david@demo.com', phone: '+1-555-0103', organizationId: org.id } }),
+    prisma.customer.create({ data: { name: 'Sarah Williams', email: 'sarah@demo.com', phone: '+1-555-0104', organizationId: org.id } }),
+    prisma.customer.create({ data: { name: 'Michael Brown', email: 'michael@demo.com', phone: '+1-555-0105', organizationId: org.id } }),
+  ])
+  console.log('✓ Customers created')
+
+  // Create orders
+  await prisma.order.create({
+    data: {
+      status: 'PENDING',
+      paymentStatus: 'PENDING',
+      subtotal: 89.99,
+      total: 89.99,
+      customerId: customers[0].id,
+      customerName: customers[0].name,
+      customerEmail: customers[0].email,
+      organizationId: org.id,
+      items: {
+        create: {
+          catalogItemId: products[0].id,
+          catalogItemName: products[0].name,
+          quantity: 1,
+          unitPrice: 89.99,
+          totalPrice: 89.99,
+        },
+      },
+    },
+  })
+  console.log('✓ Orders created')
+
+  // Create inventory for products
   for (const product of products) {
-    const existing = await prisma.catalogItem.findUnique({
-      where: { slug_organizationId: { slug: product.slug, organizationId } }
+    await prisma.inventory.create({
+      data: {
+        catalogItemId: product.id,
+        quantity: 100,
+        lowStockThreshold: 10,
+      },
     })
-    if (!existing) {
-      const { categorySlug, ...productData } = product
-      await prisma.catalogItem.create({
-        data: {
-          ...productData,
-          organizationId,
-          categoryId: createdCategories[categorySlug] || null,
-          inventory: {
-            create: {
-              quantity: Math.floor(Math.random() * 100) + 20,
-              lowStockThreshold: 10,
-            }
-          }
-        }
-      })
-      console.log(`  ✅ ${product.name}`)
-    } else {
-      console.log(`  ℹ️  ${product.name} (ya existe)`)
-    }
   }
+  console.log('✓ Inventory created')
 
-  // Crear clientes con direcciones
-  console.log('👥 Creando clientes...')
-  for (const customer of customers) {
-    const existing = await prisma.customer.findUnique({
-      where: { email_organizationId: { email: customer.email, organizationId } }
-    })
-    if (!existing) {
-      const { addresses, ...customerData } = customer
-      await prisma.customer.create({
-        data: {
-          ...customerData,
-          organizationId,
-          addresses: {
-            create: addresses
-          }
-        }
-      })
-      console.log(`  ✅ ${customer.name}`)
-    } else {
-      console.log(`  ℹ️  ${customer.name} (ya existe)`)
-    }
-  }
+  // Create drivers
+  await prisma.driver.create({
+    data: {
+      name: 'Mike Delivery',
+      email: 'mike@demo.com',
+      phone: '+1-555-0201',
+      licenseNumber: 'DL-001',
+      vehicleType: 'Motorcycle',
+      licensePlate: 'DEL-001',
+      organizationId: org.id,
+    },
+  })
+  console.log('✓ Drivers created')
 
-  console.log('\n✨ Seed completado exitosamente!')
-  console.log(`📍 Datos creados para organización: ${organizationId}`)
-  console.log('\n🏖️  Productos disponibles:')
-  console.log('   - Ropa casual y deportiva para clima tropical')
-  console.log('   - Accesorios inspirados en el Carnaval de Barranquilla')
-  console.log('   - Productos para playa y estilo de vida caribeño')
-  console.log('\n🏠 Direcciones al norte de Barranquilla:')
-  console.log('   - Riomar, Villa Campestre, Altos de Riomar')
-  console.log('   - Buenavista, Ciudad Jardín, La Castellana')
-  console.log('   - Villa Country, Villa del Este, Puerto Colombia')
+  // Create zones
+  await prisma.deliveryZone.create({
+    data: {
+      name: 'Downtown',
+      coordinates: '[[-34.6037,-58.3816],[-34.6077,-58.3716],[-34.6177,-58.3816]]',
+      shippingCost: 5.00,
+      organizationId: org.id,
+    },
+  })
+  console.log('✓ Zones created')
+
+  // Create locations
+  await prisma.location.create({
+    data: {
+      name: 'Main Warehouse',
+      address: 'Av. Corrientes 1234',
+      city: 'Buenos Aires',
+      country: 'AR',
+      latitude: -34.6037,
+      longitude: -58.3816,
+      isMain: true,
+      organizationId: org.id,
+    },
+  })
+  console.log('✓ Locations created')
+
+  // Create content sections
+  await prisma.homepageSection.create({
+    data: {
+      type: 'hero',
+      title: 'Welcome to Demo Store',
+      order: 0,
+      active: true,
+      organizationId: org.id,
+    },
+  })
+  console.log('✓ Content sections created')
+
+  console.log('\n✅ Seeding complete!')
+  console.log('Organization:', org.name)
+  console.log('Login: admin@demo.com / Admin123!')
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error en seed:', e)
+    console.error(e)
     process.exit(1)
   })
   .finally(async () => {
     await prisma.$disconnect()
+    await pool.end()
   })

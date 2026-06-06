@@ -1,7 +1,15 @@
 {
   "title": "Tags",
+  "new_tag": "Nuevo tag",
+  "name": "Nombre",
+  "slug": "Slug",
+  "name_placeholder": "Ej: Oferta",
+  "slug_placeholder": "ej: oferta",
+  "create": "Crear",
   "empty": "Sin tags",
-  "empty_desc": "Crea tu primer tag arriba",
+  "empty_desc": "Crea tu primer tag para empezar",
   "items_count": "items",
-  "confirm_delete": "¿Eliminar tag?"
+  "confirm_delete": "¿Eliminar tag?",
+  "tag_count": "tag en total",
+  "tags_count": "tags en total"
 }

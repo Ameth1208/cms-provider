@@ -97,25 +97,54 @@ model Organization {
   reviews          Review[]
   homepageSections HomepageSection[]
   homepageBanners  HomepageBanner[]
+  drivers          Driver[]
+  deliveryZones    DeliveryZone[]
+  deliveryRoutes   DeliveryRoute[]
+  locations        Location[]
+  returns          Return[]
+  invitations      Invitation[]
 }
 
 // ─── Auth & Users ───
 
 model User {
   id             String   @id @default(uuid())
-  email          String   @unique
+  email          String
   password       String
   name           String?
   active         Boolean  @default(true)
   modulesEnabled String[] @default([])
   organizationId String
+  invitedBy      String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   roles        UserRole[]
+  driver       Driver?
+
+  @@unique([email, organizationId])
+  @@index([organizationId])
+}
+
+model Invitation {
+  id             String    @id @default(uuid())
+  token          String    @unique
+  email          String
+  name           String?
+  organizationId String
+  roleIds        String[]
+  modulesEnabled String[]  @default([])
+  invitedBy      String
+  expiresAt      DateTime
+  usedAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([organizationId])
+  @@index([token])
+  @@index([email, organizationId])
 }
 
 model UserRole {
@@ -341,24 +370,38 @@ model Order {
   deliveredAt       DateTime?
   estimatedDelivery DateTime?
   
-  notes             String?
-  internalNotes     String?
-  couponCode        String?
+  notes               String?
+  internalNotes       String?
+  couponCode          String?
   
-  organizationId    String
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  // Delivery logistics
+  driverId            String?
+  deliveryZoneId      String?
+  deliveryInstructions String?
+  deliveryTimeWindow  String?        // JSON: {from: "09:00", to: "14:00"}
+  attemptCount        Int            @default(0)
+  proofOfDelivery     String?        // JSON: {photoUrl, signatureUrl, deliveredTo}
+  
+  organizationId      String
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 
   organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   customer       Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
   shippingMethod ShippingMethod? @relation(fields: [shippingMethodId], references: [id], onDelete: SetNull)
+  driver         Driver?         @relation(fields: [driverId], references: [id], onDelete: SetNull)
+  deliveryZone   DeliveryZone?   @relation(fields: [deliveryZoneId], references: [id], onDelete: SetNull)
   items          OrderItem[]
   payments       Payment[]
+  delivery       Delivery?
+  returns        Return[]
 
   @@index([organizationId])
   @@index([status])
   @@index([customerId])
   @@index([paymentStatus])
+  @@index([driverId])
+  @@index([deliveryZoneId])
 }
 
 model OrderItem {
@@ -373,6 +416,201 @@ model OrderItem {
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
+}
+
+// ─── Logistics ───
+
+model Driver {
+  id             String   @id @default(uuid())
+  name           String
+  email          String?
+  phone          String
+  licenseNumber  String?
+  vehicleType    String?  // moto, auto, camioneta, bicicleta
+  licensePlate   String?
+  active         Boolean  @default(true)
+  currentLat     Float?
+  currentLng     Float?
+  lastLocationAt DateTime?
+  userId         String?  @unique
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  orders       Order[]
+  deliveries   Delivery[]
+  routes       DeliveryRoute[]
+  pickups      Return[]
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([active])
+}
+
+model Delivery {
+  id                String         @id @default(uuid())
+  orderId           String         @unique
+  driverId          String
+  status            DeliveryStatus @default(ASSIGNED)
+  assignedAt        DateTime       @default(now())
+  startedAt         DateTime?
+  completedAt       DateTime?
+  failedAt          DateTime?
+  estimatedArrival  DateTime?
+  actualArrival     DateTime?
+  notes             String?
+  failureReason     String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  order        Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  driver       Driver       @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  trackingEvents TrackingEvent[]
+
+  @@index([orderId])
+  @@index([driverId])
+  @@index([status])
+}
+
+model TrackingEvent {
+  id          String   @id @default(uuid())
+  deliveryId  String
+  status      String   // in_transit, nearby, arrived, completed, failed
+  latitude    Float?
+  longitude   Float?
+  address     String?
+  notes       String?
+  timestamp   DateTime @default(now())
+
+  delivery Delivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+
+  @@index([deliveryId])
+  @@index([timestamp])
+}
+
+model DeliveryZone {
+  id             String  @id @default(uuid())
+  name           String
+  coordinates    String  // JSON polygon array
+  shippingCost   Float   @default(0)
+  estimatedDays  Int     @default(1)
+  color          String  @default("#3b82f6")
+  active         Boolean @default(true)
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  orders       Order[]
+
+  @@index([organizationId])
+  @@index([active])
+}
+
+model DeliveryRoute {
+  id          String   @id @default(uuid())
+  name        String
+  driverId    String
+  date        DateTime @default(now())
+  status      RouteStatus @default(PLANNED)
+  orderIds    String[] // Array of order IDs
+  startedAt   DateTime?
+  completedAt DateTime?
+  notes       String?
+  organizationId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  driver       Driver       @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([driverId])
+  @@index([organizationId])
+  @@index([date])
+  @@index([status])
+}
+
+enum DeliveryStatus {
+  ASSIGNED
+  IN_PROGRESS
+  NEARBY
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum RouteStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// ─── Returns ───
+
+enum ReturnStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  IN_TRANSIT
+  RECEIVED
+  REFUNDED
+  EXCHANGED
+}
+
+enum ReturnReason {
+  DEFECTIVE
+  WRONG_ITEM
+  NOT_AS_DESCRIBED
+  CHANGED_MIND
+  SIZE_ISSUE
+  ARRIVED_LATE
+  OTHER
+}
+
+model Return {
+  id             String       @id @default(uuid())
+  orderId        String
+  orderItemId    String?
+  status         ReturnStatus @default(REQUESTED)
+  reason         ReturnReason
+  reasonDetails  String?      // Descripción adicional del cliente
+  photos         String[]     // URLs de fotos
+  
+  // Cantidades
+  quantity       Int          @default(1)
+  refundAmount   Float?
+  
+  // Estado físico
+  receivedAt     DateTime?
+  receivedBy     String?      // Quién recibió la devolución
+  condition      String?      // Estado en que llegó: good, damaged, used
+  
+  // Resolución
+  resolution     String?      // refund, exchange, store_credit, repair
+  resolutionNotes String?
+  resolvedAt     DateTime?
+  
+  // Pickup
+  pickupAddress  String?
+  pickupScheduledAt DateTime?
+  pickupCompletedAt DateTime?
+  pickupDriverId String?
+  
+  organizationId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  pickupDriver Driver?     @relation(fields: [pickupDriverId], references: [id], onDelete: SetNull)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([orderId])
+  @@index([status])
+  @@index([pickupDriverId])
 }
 
 // ─── Inventory ───
@@ -645,4 +883,30 @@ model ShippingMethod {
   orders       Order[]
 
   @@index([organizationId])
+}
+
+// ─── Locations / Branches ───
+
+model Location {
+  id             String  @id @default(uuid())
+  name           String
+  address        String
+  city           String?
+  state          String?
+  zip            String?
+  country        String?
+  phone          String?
+  email          String?
+  latitude       Float?
+  longitude      Float?
+  isMain         Boolean @default(false)
+  active         Boolean @default(true)
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([active])
 }

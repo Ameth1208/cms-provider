@@ -15,7 +15,7 @@ export class HybridAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest()
     const authHeader = request.headers.authorization as string | undefined
-    const apiKey = request.headers['x-api-key'] as string | undefined
+    const apiKey = request.headers['api-key'] as string | undefined
 
     // Try JWT first
     if (authHeader?.startsWith('Bearer ')) {

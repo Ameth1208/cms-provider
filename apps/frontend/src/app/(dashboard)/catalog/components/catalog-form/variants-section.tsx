@@ -149,11 +149,11 @@ export function VariantsSection() {
               </div>
 
               <div className="flex gap-2">
-                <input
+                <Input
                   type="color"
                   value={customColor}
                   onChange={(e) => setCustomColor(e.target.value)}
-                  className="h-9 w-9 rounded cursor-pointer border p-0.5"
+                  className="h-9 w-9 rounded cursor-pointer border border-border p-0.5"
                 />
                 <Input
                   value={customColorName}
@@ -170,7 +170,9 @@ export function VariantsSection() {
               {selectedColors.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Icon icon="lucide:check-circle" className="h-4 w-4 text-emerald-500" />
-                  {selectedColors.length} {selectedColors.length === 1 ? 'color' : 'colores'} seleccionado
+                  {selectedColors.length === 1
+                    ? t('color_selected', { count: selectedColors.length })
+                    : t('colors_selected', { count: selectedColors.length })}
                 </div>
               )}
             </div>
@@ -199,7 +201,9 @@ export function VariantsSection() {
               {selectedSizes.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Icon icon="lucide:check-circle" className="h-4 w-4 text-emerald-500" />
-                  {selectedSizes.length} {selectedSizes.length === 1 ? 'talla' : 'tallas'} seleccionada
+                  {selectedSizes.length === 1
+                    ? t('size_selected', { count: selectedSizes.length })
+                    : t('sizes_selected', { count: selectedSizes.length })}
                 </div>
               )}
             </div>

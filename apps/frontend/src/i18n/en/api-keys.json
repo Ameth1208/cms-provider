@@ -26,6 +26,7 @@
   "api_keys_new_key_title": "New API Key created",
   "api_keys_new_key_warning": "Copy this key now. You won't be able to see it again.",
   "api_keys_close": "Close",
+  "api_keys_regenerate_confirm": "Regenerate this API key? The previous one will stop working.",
   "api_keys_no_results": "No API keys",
   "api_keys_all_resources": "All resources",
   "api_keys_select_resource": "Select resource",

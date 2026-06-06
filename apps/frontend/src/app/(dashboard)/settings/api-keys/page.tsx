@@ -8,6 +8,7 @@ import { useApiKeys } from './hooks/useApiKeys'
 import { useApiKeysStore } from './store/api-keys-store'
 import { ApiKeysTable } from './components/api-keys-table'
 import { ApiKeysDialogs } from './components/api-keys-dialogs'
+import { ApiKeyRegenerateDialog } from './components/api-key-regenerate-dialog'
 import { PageHeader } from '@/components/page-header'
 import { useTranslation } from '@/i18n/use-translation'
 
@@ -18,6 +19,7 @@ function ApiKeysTableWrapper() {
     <>
       <ApiKeysTable />
       <ApiKeysDialogs />
+      <ApiKeyRegenerateDialog />
     </>
   )
 }
@@ -35,12 +37,12 @@ export default function ApiKeysPage() {
       >
         <Button onClick={() => { resetForm(); setCreateOpen(true) }}>
           <Icon icon="lucide:plus" className="h-4 w-4 mr-2" />
-          Crear API Key
+          {t('api_keys_create')}
         </Button>
       </PageHeader>
 
       <Card>
-        <CardContent className="p-0 pt-4">
+        <CardContent className="p-0">
           <ApiKeysTableWrapper />
         </CardContent>
       </Card>

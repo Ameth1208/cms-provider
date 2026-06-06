@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common'
+import { Controller, Post, Get, Body, Query, UseGuards } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { AuthService } from './auth.service'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
@@ -10,7 +10,7 @@ export class AuthController {
   constructor(private auth: AuthService) {}
 
   @Post('login')
-  login(@Body() body: { email: string; password: string }) {
+  login(@Body() body: { email: string; password: string; organizationSlug?: string }) {
     return this.auth.login(body)
   }
 
@@ -29,5 +29,20 @@ export class AuthController {
   @ApiBearerAuth()
   getProfile(@CurrentUser('sub') userId: string) {
     return this.auth.getProfile(userId)
+  }
+
+  @Post('accept-invitation')
+  acceptInvitation(
+    @Body() body: { token: string; name: string; password: string },
+  ) {
+    return this.auth.acceptInvitation(body.token, {
+      name: body.name,
+      password: body.password,
+    })
+  }
+
+  @Get('validate-invitation')
+  validateInvitation(@Query('token') token: string) {
+    return this.auth.validateInvitationToken(token)
   }
 }

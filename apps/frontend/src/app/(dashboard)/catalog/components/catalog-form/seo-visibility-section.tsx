@@ -175,13 +175,13 @@ export function SeoVisibilitySection() {
             </p>
             <div className="space-y-1">
               <p className="text-sm text-primary truncate">
-                {(form.metaTitle || form.name || 'Título') + ' | Tu Tienda'}
+                {(form.metaTitle || form.name || t('title_placeholder')) + ' | ' + t('preview')}
               </p>
               <p className="text-xs text-emerald-500">
-                tudominio.com/catalog/{form.slug || 'producto'}
+                {t('domain_preview')}/catalog/{form.slug || t('slug_placeholder')}
               </p>
               <p className="text-xs text-muted-foreground line-clamp-2">
-                {form.metaDescription || form.description || 'Descripción...'}
+                {form.metaDescription || form.description || t('description_placeholder_preview')}
               </p>
             </div>
           </div>

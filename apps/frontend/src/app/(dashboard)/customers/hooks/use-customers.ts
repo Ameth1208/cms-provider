@@ -4,6 +4,7 @@ import { useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { api } from '@/lib/api-client'
 import { useCustomersStore } from '../store/customers-store'
+import { formatPhone } from '@/components/ui/phone-input'
 
 export function useCustomers() {
   const { token } = useAuth()
@@ -15,6 +16,7 @@ export function useCustomers() {
   const formName = useCustomersStore((s) => s.formName)
   const formEmail = useCustomersStore((s) => s.formEmail)
   const formPhone = useCustomersStore((s) => s.formPhone)
+  const formPhoneCountry = useCustomersStore((s) => s.formPhoneCountry)
   const formDocument = useCustomersStore((s) => s.formDocument)
   const formDocumentType = useCustomersStore((s) => s.formDocumentType)
   const formNotes = useCustomersStore((s) => s.formNotes)
@@ -23,6 +25,7 @@ export function useCustomers() {
   const setFormName = useCustomersStore((s) => s.setFormName)
   const setFormEmail = useCustomersStore((s) => s.setFormEmail)
   const setFormPhone = useCustomersStore((s) => s.setFormPhone)
+  const setFormPhoneCountry = useCustomersStore((s) => s.setFormPhoneCountry)
   const setFormDocument = useCustomersStore((s) => s.setFormDocument)
   const setFormDocumentType = useCustomersStore((s) => s.setFormDocumentType)
   const setFormNotes = useCustomersStore((s) => s.setFormNotes)
@@ -45,10 +48,13 @@ export function useCustomers() {
   const createCustomer = useCallback(async () => {
     const state = useCustomersStore.getState()
     if (!token || !state.formEmail.trim()) return
+    const phone = state.formPhone.trim()
+      ? formatPhone(state.formPhone.trim(), state.formPhoneCountry)
+      : undefined
     await api.post('/customers', {
       name: state.formName.trim(),
       email: state.formEmail.trim(),
-      phone: state.formPhone.trim() || undefined,
+      phone,
       document: state.formDocument.trim() || undefined,
       documentType: state.formDocumentType,
       notes: state.formNotes.trim() || undefined,
@@ -61,10 +67,13 @@ export function useCustomers() {
   const updateCustomer = useCallback(async () => {
     const state = useCustomersStore.getState()
     if (!token || !state.selected) return
+    const phone = state.formPhone.trim()
+      ? formatPhone(state.formPhone.trim(), state.formPhoneCountry)
+      : undefined
     await api.put(`/customers/${state.selected.id}`, {
       name: state.formName.trim(),
       email: state.formEmail.trim(),
-      phone: state.formPhone.trim() || undefined,
+      phone,
       document: state.formDocument.trim() || undefined,
       documentType: state.formDocumentType,
       notes: state.formNotes.trim() || undefined,
@@ -89,6 +98,7 @@ export function useCustomers() {
     formName,
     formEmail,
     formPhone,
+    formPhoneCountry,
     formDocument,
     formDocumentType,
     formNotes,
@@ -97,6 +107,7 @@ export function useCustomers() {
     setFormName,
     setFormEmail,
     setFormPhone,
+    setFormPhoneCountry,
     setFormDocument,
     setFormDocumentType,
     setFormNotes,

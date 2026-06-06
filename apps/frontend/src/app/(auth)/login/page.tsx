@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Store, Mail, Lock, Eye, EyeOff, LogIn, Loader2, AlertCircle } from 'lucide-react'
+import { Store, Mail, Lock, Eye, EyeOff, LogIn, Loader2, AlertCircle, Building2 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,15 +16,22 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [organizations, setOrganizations] = useState<{ id: string; name: string; slug: string }[]>([])
+  const [selectedOrgSlug, setSelectedOrgSlug] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    const result = await login(email, password)
+    const result = await login(email, password, selectedOrgSlug || undefined)
 
     if (!result.success) {
+      if (result.requireOrganizationSelection) {
+        setOrganizations(result.organizations)
+        setLoading(false)
+        return
+      }
       setError(result.error || 'Credenciales inválidas')
       setLoading(false)
       return
@@ -64,7 +71,11 @@ export default function LoginPage() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value)
+                    setOrganizations([])
+                    setSelectedOrgSlug('')
+                  }}
                   placeholder="admin@ejemplo.com"
                   className="h-11 pl-10 bg-white/5 border-border  text-white placeholder:text-white/30 focus:border-white/30 focus:ring-white/20"
                   required
@@ -98,6 +109,31 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {organizations.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-xs font-medium tracking-wider text-white/50">
+                  Selecciona una organización
+                </Label>
+                <div className="space-y-2">
+                  {organizations.map((org) => (
+                    <button
+                      key={org.id}
+                      type="button"
+                      onClick={() => setSelectedOrgSlug(org.slug)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all border ${
+                        selectedOrgSlug === org.slug
+                          ? 'bg-white/10 border-white/30 text-white'
+                          : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/[0.07]'
+                      }`}
+                    >
+                      <Building2 className="h-4 w-4 shrink-0" />
+                      <span className="text-sm">{org.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {error && (
               <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 rounded-xl px-4 py-3 border border-red-500/20">
                 <AlertCircle className="h-4 w-4 shrink-0" />
@@ -105,13 +141,13 @@ export default function LoginPage() {
               </div>
             )}
 
-            <Button type="submit" className="w-full h-11 text-sm bg-white text-black hover:bg-white/90" disabled={loading}>
+            <Button type="submit" className="w-full h-11 text-sm bg-white text-black hover:bg-white/90" disabled={loading || (organizations.length > 0 && !selectedOrgSlug)}>
               {loading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <LogIn className="mr-2 h-4 w-4" />
               )}
-              {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+              {loading ? 'Iniciando sesión...' : organizations.length > 0 ? 'Continuar' : 'Iniciar sesión'}
             </Button>
           </form>
         </div>

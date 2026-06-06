@@ -23,6 +23,7 @@ interface ApiKeysState {
   editOpen: boolean
   newKeyOpen: boolean
   deleteOpen: boolean
+  regenerateOpen: boolean
   formName: string
   formPerms: string[]
   copied: boolean
@@ -34,6 +35,7 @@ interface ApiKeysState {
   setEditOpen: (open: boolean) => void
   setNewKeyOpen: (open: boolean) => void
   setDeleteOpen: (open: boolean) => void
+  setRegenerateOpen: (open: boolean) => void
   setFormName: (name: string) => void
   setFormPerms: (perms: string[] | ((prev: string[]) => string[])) => void
   setCopied: (copied: boolean) => void
@@ -49,6 +51,7 @@ export const useApiKeysStore = create<ApiKeysState>((set) => ({
   editOpen: false,
   newKeyOpen: false,
   deleteOpen: false,
+  regenerateOpen: false,
   formName: '',
   formPerms: [],
   copied: false,
@@ -60,6 +63,7 @@ export const useApiKeysStore = create<ApiKeysState>((set) => ({
   setEditOpen: (editOpen) => set({ editOpen }),
   setNewKeyOpen: (newKeyOpen) => set({ newKeyOpen }),
   setDeleteOpen: (deleteOpen) => set({ deleteOpen }),
+  setRegenerateOpen: (regenerateOpen) => set({ regenerateOpen }),
   setFormName: (formName) => set({ formName }),
   setFormPerms: (formPerms) =>
     set((s) => ({

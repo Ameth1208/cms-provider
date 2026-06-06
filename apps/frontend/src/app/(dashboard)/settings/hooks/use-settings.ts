@@ -1,45 +1,36 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import { useSettingsStore } from '@/store'
 import { api } from '@/lib/api-client'
-import type { ThemeSettings } from '@cms/shared'
 
 export function useSettings() {
   const { token } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState<ThemeSettings>({
-    companyName: '',
-    primaryColor: '#000000',
-    secondaryColor: '#f1f5f9',
-    accentColor: '#f1f5f9',
-    fontFamily: 'var(--font-poppins)',
-    logoUrl: null,
-  })
+  const { settings, loading, fetchSettings, saveSettings, updateField } = useSettingsStore()
 
   useEffect(() => {
     if (!token) return
-    api.get<ThemeSettings>('/settings', token)
-      .then((data) => setForm(data))
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [token])
+    fetchSettings(token)
+  }, [token, fetchSettings])
 
-  const handleChange = useCallback((key: keyof ThemeSettings, value: string | null) => {
-    setForm((prev) => ({ ...prev, [key]: value }))
-  }, [])
+  const handleChange = (key: keyof typeof settings, value: string | null) => {
+    updateField(key, value)
+  }
 
-  const handleSave = useCallback(async () => {
+  const handleSave = async () => {
     if (!token) return
-    setSaving(true)
-    try {
-      const updated = await api.put<ThemeSettings>('/settings', form, token)
-      setForm(updated)
-    } finally {
-      setSaving(false)
-    }
-  }, [token, form])
+    await saveSettings(token, settings)
+  }
 
-  return { form, loading, saving, handleChange, handleSave }
+  const uploadLogo = async (file: File) => {
+    if (!token) throw new Error('No token')
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('folder', 'logos')
+    const { url } = await api.upload<{ url: string }>('/media/upload', formData, token)
+    return url
+  }
+
+  return { form: settings, loading, saving: loading, handleChange, handleSave, uploadLogo }
 }

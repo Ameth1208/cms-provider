@@ -26,11 +26,23 @@
   "api_keys_new_key_title": "Nueva API Key creada",
   "api_keys_new_key_warning": "Copia esta clave ahora. No podrás verla de nuevo.",
   "api_keys_close": "Cerrar",
+  "api_keys_regenerate": "Regenerar",
   "api_keys_no_results": "No hay API keys",
   "api_keys_all_resources": "Todos los recursos",
   "api_keys_select_resource": "Seleccionar recurso",
   "api_keys_action_read": "Leer",
   "api_keys_action_create": "Crear",
   "api_keys_action_update": "Actualizar",
-  "api_keys_action_delete": "Eliminar"
+  "api_keys_action_delete": "Eliminar",
+
+  "module_catalog": "Catálogo",
+  "module_orders": "Pedidos",
+  "module_inventory": "Inventario",
+  "module_batches": "Lotes",
+  "module_campaigns": "Campañas",
+  "module_content": "Contenido",
+  "module_reviews": "Reseñas",
+  "module_users": "Usuarios",
+  "module_settings": "Ajustes",
+  "module_media": "Media"
 }

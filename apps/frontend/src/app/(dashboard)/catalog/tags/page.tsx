@@ -1,106 +1,76 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { useAuth } from '@/lib/auth-context'
 import { Icon } from '@iconify/react'
-import { api } from '@/lib/api-client'
+import { useTranslation } from '@/i18n/use-translation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { PageSkeleton } from '@/components/skeletons'
+import { Skeleton } from '@/components/ui/skeleton'
 import { PageHeader } from '@/components/page-header'
-import { useTranslation } from '@/i18n/use-translation'
-
-interface TagWithCount {
-  id: string
-  name: string
-  slug: string
-  _count: { catalogItems: number }
-}
+import { useTags, generateSlug } from './hooks/use-tags'
 
 export default function TagsPage() {
-  const { token } = useAuth()
   const { t } = useTranslation()
-  const [tags, setTags] = useState<TagWithCount[]>([])
-  const [loading, setLoading] = useState(true)
-  const [name, setName] = useState('')
-  const [slug, setSlug] = useState('')
-
-  const fetch = useCallback(async () => {
-    if (!token) return
-    setLoading(true)
-    try {
-      const data = await api.get<TagWithCount[]>('/catalog/tags/all', token)
-      setTags(data)
-    } finally {
-      setLoading(false)
-    }
-  }, [token])
-
-  useEffect(() => { fetch() }, [fetch])
-
-  function generateSlug(n: string) {
-    return n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-  }
-
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault()
-    if (!token || !name || !slug) return
-    await api.post('/catalog/tags', { name, slug }, token)
-    setName('')
-    setSlug('')
-    fetch()
-  }
-
-  async function handleDelete(id: string) {
-    if (!token) return
-    if (!confirm('¿Eliminar tag?')) return
-    await api.delete(`/catalog/tags/${id}`, token)
-    fetch()
-  }
+  const {
+    tags,
+    loading,
+    name,
+    setName,
+    slug,
+    setSlug,
+    handleCreate,
+    handleDelete,
+  } = useTags()
 
   if (loading) {
-    return <PageSkeleton />
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-48 rounded-lg" />
+        <Skeleton className="h-40 w-full rounded-xl" />
+        <Skeleton className="h-40 w-full rounded-xl" />
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader title={t('tags')} />
+    <div className="space-y-6 pb-10">
+      <PageHeader
+        title={t('title')}
+        description={`${tags.length} ${tags.length === 1 ? t('tag_count') : t('tags_count')}`}
+      />
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Nuevo tag</CardTitle>
+          <CardTitle className="text-base font-medium">{t('new_tag')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleCreate} className="flex gap-3 items-end">
-            <div className="space-y-2 flex-1">
-              <Label htmlFor="tagName">Nombre</Label>
+          <form onSubmit={handleCreate} className="flex flex-col sm:flex-row gap-3 items-end">
+            <div className="space-y-2 flex-1 w-full">
+              <Label>{t('name')}</Label>
               <Input
-                id="tagName"
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value)
                   if (!slug || slug === generateSlug(name)) setSlug(generateSlug(e.target.value))
                 }}
-                placeholder="Ej: Oferta"
+                placeholder={t('name_placeholder')}
                 required
               />
             </div>
-            <div className="space-y-2 flex-1">
-              <Label htmlFor="tagSlug">Slug</Label>
+            <div className="space-y-2 flex-1 w-full">
+              <Label>{t('slug')}</Label>
               <Input
-                id="tagSlug"
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
-                placeholder="ej: oferta"
+                placeholder={t('slug_placeholder')}
                 required
               />
             </div>
-            <Button type="submit">
-              <Icon icon="lucide:plus" className="mr-2 h-4 w-4" />
-              Crear
+            <Button type="submit" className="gap-2 w-full sm:w-auto">
+              <Icon icon="lucide:plus" className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('create')}</span>
             </Button>
           </form>
         </CardContent>
@@ -108,10 +78,10 @@ export default function TagsPage() {
 
       {tags.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            <Icon icon="lucide:tags" className="mx-auto h-8 w-8 mb-3 opacity-50" />
-            <p>Sin tags</p>
-            <p className="text-sm">Crea tu primer tag arriba</p>
+          <CardContent className="py-16 text-center">
+            <Icon icon="lucide:tags" className="mx-auto h-10 w-10 mb-4 text-muted-foreground/50" />
+            <p className="text-muted-foreground font-light">{t('empty')}</p>
+            <p className="text-sm text-muted-foreground mt-1">{t('empty_desc')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -123,9 +93,13 @@ export default function TagsPage() {
                   <Icon icon="lucide:tag" className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium text-sm">{tag.name}</span>
                 </div>
-                <Badge variant="secondary" className="text-xs">{tag._count?.catalogItems ?? 0}</Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {tag._count?.catalogItems ?? 0} {t('items_count')}
+                </Badge>
                 <button
-                  onClick={() => handleDelete(tag.id)}
+                  onClick={() => {
+                    if (confirm(t('confirm_delete'))) handleDelete(tag.id)
+                  }}
                   className="ml-2 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <Icon icon="lucide:x" className="h-4 w-4" />

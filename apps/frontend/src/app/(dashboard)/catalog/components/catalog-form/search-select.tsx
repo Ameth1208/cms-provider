@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Icon } from '@iconify/react'
+import { useTranslation } from '@/i18n/use-translation'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   Command,
@@ -47,12 +48,16 @@ export function SearchSelect({
   value,
   onChange,
   mode,
-  placeholder = 'Seleccionar...',
-  searchPlaceholder = 'Buscar...',
-  createPlaceholder = 'Crear',
+  placeholder: placeholderProp,
+  searchPlaceholder: searchPlaceholderProp,
+  createPlaceholder: createPlaceholderProp,
   onCreate,
   disabled,
 }: SearchSelectProps) {
+  const { t } = useTranslation()
+  const placeholder = placeholderProp ?? t('select_placeholder')
+  const searchPlaceholder = searchPlaceholderProp ?? t('search_placeholder')
+  const createPlaceholder = createPlaceholderProp ?? t('create')
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
 
@@ -111,7 +116,7 @@ export function SearchSelect({
               onValueChange={setSearch}
             />
             <CommandList>
-              <CommandEmpty>No encontrado.</CommandEmpty>
+              <CommandEmpty>{t('not_found')}</CommandEmpty>
               <CommandGroup>
                 {options.map((opt) => {
                   const isSelected = selectedIds.includes(opt.id)
