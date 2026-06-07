@@ -40,7 +40,11 @@ export function useAdminClients() {
     try {
       const data = await api.get<Client[]>('/admin/clients', token)
       setClients(data)
-    } catch {
+    } catch (err: any) {
+      console.error('Error fetching clients:', err)
+      if (err.status === 403) {
+        console.error('Access denied - User is not OWNER')
+      }
       setClients([])
     } finally {
       setLoading(false)

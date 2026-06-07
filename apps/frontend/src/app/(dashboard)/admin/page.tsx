@@ -12,14 +12,21 @@ import { CreateClientDialog } from './components/create-client-dialog'
 import { PageHeader } from '@/components/page-header'
 
 export default function AdminPage() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const { t } = useTranslation()
+
+  // Debug: log user roles
+  useEffect(() => {
+    console.log('User roles:', user?.roles)
+    console.log('User permissions:', user?.permissions)
+  }, [user])
   const {
     clients,
     loading,
     setCreateOpen,
     fetchClients,
     updateClientStatus,
+    updateClientModules,
   } = useAdminClients()
 
   useEffect(() => {
@@ -30,8 +37,30 @@ export default function AdminPage() {
 
   if (!isOwner) {
     return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <p className="text-muted-foreground">Acceso denegado</p>
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+        <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+          <Icon icon="lucide:shield-alert" className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <div className="text-center space-y-2">
+          <p className="text-muted-foreground font-medium text-lg">Acceso denegado</p>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            Tu usuario no tiene permisos de OWNER. Esto puede pasar si:
+          </p>
+          <ul className="text-sm text-muted-foreground text-left max-w-sm mx-auto space-y-1">
+            <li className="flex items-start gap-2">
+              <Icon icon="lucide:alert-circle" className="h-4 w-4 mt-0.5 shrink-0" />
+              La base de datos fue reseteada y tu sesión es vieja
+            </li>
+            <li className="flex items-start gap-2">
+              <Icon icon="lucide:alert-circle" className="h-4 w-4 mt-0.5 shrink-0" />
+              No estás logueado como admin@cms.cloud
+            </li>
+          </ul>
+        </div>
+        <Button variant="outline" onClick={() => logout()}>
+          <Icon icon="lucide:log-out" className="h-4 w-4 mr-2" />
+          Cerrar sesión y volver a entrar
+        </Button>
       </div>
     )
   }
@@ -125,6 +154,7 @@ export default function AdminPage() {
             clients={clients}
             loading={loading}
             onToggleStatus={updateClientStatus}
+            onUpdateModules={updateClientModules}
           />
         </CardContent>
       </Card>

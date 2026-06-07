@@ -3,7 +3,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useState } from 'react'
 import type { Client } from '../hooks/use-admin-clients'
+import { EditModulesDialog } from './edit-modules-dialog'
 
 const ALL_MODULES = [
   { key: 'catalog', label: 'Catálogo', icon: 'lucide:package' },
@@ -39,9 +41,11 @@ interface ClientsListProps {
   clients: Client[]
   loading: boolean
   onToggleStatus: (id: string, status: string) => void
+  onUpdateModules: (id: string, modules: string[]) => void
 }
 
-export function ClientsList({ clients, loading, onToggleStatus }: ClientsListProps) {
+export function ClientsList({ clients, loading, onToggleStatus, onUpdateModules }: ClientsListProps) {
+  const [editModulesClient, setEditModulesClient] = useState<Client | null>(null)
   if (loading) {
     return (
       <div className="space-y-3">
@@ -134,7 +138,16 @@ export function ClientsList({ clients, loading, onToggleStatus }: ClientsListPro
                 </div>
 
                 {/* Actions */}
-                <div className="shrink-0">
+                <div className="shrink-0 flex flex-col gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditModulesClient(client)}
+                    className="text-muted-foreground hover:text-primary"
+                  >
+                    <Icon icon="lucide:settings" className="h-3.5 w-3.5 mr-1" />
+                    Módulos
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
@@ -162,6 +175,13 @@ export function ClientsList({ clients, loading, onToggleStatus }: ClientsListPro
           </Card>
         )
       })}
+      
+      <EditModulesDialog
+        client={editModulesClient}
+        open={!!editModulesClient}
+        onOpenChange={(open) => !open && setEditModulesClient(null)}
+        onSave={onUpdateModules}
+      />
     </div>
   )
 }
