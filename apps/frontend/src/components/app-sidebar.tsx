@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { Icon } from '@iconify/react'
 import { useTheme } from 'next-themes'
-import { useLocaleStore, useNotificationsStore } from '@/store'
+import { useLocaleStore, useSettingsStore, useNotificationsStore } from '@/store'
 import { useTranslation } from '@/i18n/use-translation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Tooltip,
   TooltipContent,
@@ -68,11 +68,18 @@ interface AppSidebarProps {
 
 export function AppSidebar({ collapsed }: AppSidebarProps) {
   const pathname = usePathname()
-  const { user, logout } = useAuth()
+  const { user, logout, token } = useAuth()
   const { theme, setTheme } = useTheme()
   const { locale, setLocale } = useLocaleStore()
   const { t } = useTranslation()
+  const { settings, fetchSettings } = useSettingsStore()
   const { unreadCount } = useNotificationsStore()
+
+  useEffect(() => {
+    if (token && !settings.companyName) {
+      fetchSettings(token)
+    }
+  }, [token, settings.companyName, fetchSettings])
 
   const [openItems, setOpenItems] = useState<Set<string>>(new Set(['catalog']))
 
@@ -285,6 +292,31 @@ export function AppSidebar({ collapsed }: AppSidebarProps) {
           collapsed ? 'w-[68px]' : 'w-[240px]'
         }`}
       >
+        {/* ─── Header ─── */}
+        <div className="shrink-0 flex items-center h-14 px-3.5">
+          <Link
+            href="/"
+            className={`flex items-center gap-2.5 min-w-0 ${collapsed ? 'justify-center w-full' : ''}`}
+          >
+            {settings.logoUrl ? (
+              <img 
+                src={settings.logoUrl} 
+                alt={settings.companyName || 'Logo'} 
+                className="h-7 w-7 object-contain rounded-md shrink-0"
+              />
+            ) : (
+              <div className="h-7 w-7 rounded-md bg-foreground flex items-center justify-center shrink-0">
+                <Icon icon="lucide:hexagon" className="h-4 w-4 text-background" />
+              </div>
+            )}
+            {!collapsed && (
+              <span className="text-[14px] font-medium tracking-tight text-foreground truncate">
+                {settings.companyName || user?.organizationName || 'CMS'}
+              </span>
+            )}
+          </Link>
+        </div>
+
         {/* ─── Nav ─── */}
         <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-1 space-y-4 scrollbar-none">
           {navGroups.map((group, groupIndex) => {
