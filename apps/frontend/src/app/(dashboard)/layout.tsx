@@ -11,7 +11,7 @@ import { useSidebar } from '@/hooks/use-sidebar'
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
-  const { collapsed } = useSidebar()
+  const { collapsed, toggle } = useSidebar()
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -34,7 +34,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-dvh bg-background">
-      <AppSidebar collapsed={collapsed} />
+      <AppSidebar collapsed={collapsed} onToggle={toggle} />
       <main className="flex-1 overflow-y-auto min-w-0 h-dvh">
         <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-sm border-b border-border px-6 py-3 lg:px-10 flex items-center justify-end">
           <NotificationsDropdown />
