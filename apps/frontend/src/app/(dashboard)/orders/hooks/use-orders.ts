@@ -24,6 +24,10 @@ export interface Order {
   tax: number
   shippingCost: number
   total: number
+  overpaidAmount: number
+  cancelledAt?: string
+  cancellationReason?: string
+  refundedAmount: number
   customerId?: string
   customerName: string
   customerEmail: string
@@ -90,9 +94,9 @@ export interface CreateOrderData {
 
 export function useOrders() {
   const { token } = useAuth()
-  const { setOrders, setLoading, setStats, updateOrder: updateOrderInStore } = useOrdersStore()
+  const { setOrders, setLoading, setStats, setTotalOrders, updateOrder: updateOrderInStore } = useOrdersStore()
 
-  const fetchOrders = useCallback(async (filters?: { status?: string; paymentStatus?: string; customerId?: string }) => {
+  const fetchOrders = useCallback(async (filters?: { status?: string; paymentStatus?: string; customerId?: string; search?: string; from?: string; to?: string; page?: number; pageSize?: number }) => {
     if (!token) return
     setLoading(true)
     try {
@@ -100,17 +104,24 @@ export function useOrders() {
       if (filters?.status) params.append('status', filters.status)
       if (filters?.paymentStatus) params.append('paymentStatus', filters.paymentStatus)
       if (filters?.customerId) params.append('customerId', filters.customerId)
+      if (filters?.search) params.append('search', filters.search)
+      if (filters?.from) params.append('from', filters.from)
+      if (filters?.to) params.append('to', filters.to)
+      if (filters?.page) params.append('page', filters.page.toString())
+      if (filters?.pageSize) params.append('pageSize', filters.pageSize.toString())
       
       const qs = params.toString()
-      const data = await api.get<Order[]>(`/orders${qs ? '?' + qs : ''}`, token)
-      setOrders(data)
+      const data = await api.get<{ orders: Order[]; total: number }>(`/orders${qs ? '?' + qs : ''}`, token)
+      setOrders(data.orders)
+      setTotalOrders(data.total)
     } catch (err) {
       console.error('Error fetching orders:', err)
       setOrders([])
+      setTotalOrders(0)
     } finally {
       setLoading(false)
     }
-  }, [token, setOrders, setLoading])
+  }, [token, setOrders, setLoading, setTotalOrders])
 
   const fetchStats = useCallback(async () => {
     if (!token) return
@@ -193,6 +204,36 @@ export function useOrders() {
     }
   }, [token])
 
+  const addPayment = useCallback(async (id: string, data: { method: string; amount: number; reference?: string }) => {
+    if (!token) return null
+    try {
+      const updated = await api.post<Order>(`/orders/${id}/payments`, data, token)
+      if (updated) {
+        updateOrderInStore(updated)
+        return updated
+      }
+      return null
+    } catch (error) {
+      console.error('Error adding payment:', error)
+      throw error
+    }
+  }, [token, updateOrderInStore])
+
+  const cancelOrder = useCallback(async (id: string, data: { reason?: string }) => {
+    if (!token) return null
+    try {
+      const updated = await api.post<Order>(`/orders/${id}/cancel`, data, token)
+      if (updated) {
+        updateOrderInStore(updated)
+        return updated
+      }
+      return null
+    } catch (error) {
+      console.error('Error cancelling order:', error)
+      throw error
+    }
+  }, [token, updateOrderInStore])
+
   return {
     fetchOrders,
     fetchStats,
@@ -202,6 +243,8 @@ export function useOrders() {
     updateOrder,
     addOrderItem,
     removeOrderItem,
+    addPayment,
+    cancelOrder,
     searchCustomers,
     searchProducts,
   }

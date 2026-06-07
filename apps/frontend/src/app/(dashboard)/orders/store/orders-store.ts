@@ -19,6 +19,10 @@ export interface Order {
   tax: number
   shippingCost: number
   total: number
+  overpaidAmount: number
+  cancelledAt?: string
+  cancellationReason?: string
+  refundedAmount: number
   customerId?: string
   customerName: string
   customerEmail: string
@@ -82,6 +86,11 @@ interface OrdersState {
   createOpen: boolean
   viewMode: 'cards' | 'table' | 'kanban'
   statusFilter: string
+  searchQuery: string
+  dateFilter: string
+  page: number
+  pageSize: number
+  totalOrders: number
   setOrders: (orders: Order[]) => void
   setLoading: (loading: boolean) => void
   setStats: (stats: OrdersState['stats']) => void
@@ -91,6 +100,11 @@ interface OrdersState {
   setCreateOpen: (open: boolean) => void
   setViewMode: (mode: OrdersState['viewMode']) => void
   setStatusFilter: (filter: string) => void
+  setSearchQuery: (query: string) => void
+  setDateFilter: (filter: string) => void
+  setPage: (page: number) => void
+  setPageSize: (size: number) => void
+  setTotalOrders: (total: number) => void
   openDetail: (id: string) => void
   openCreate: () => void
   closeDetail: () => void
@@ -111,8 +125,13 @@ export const useOrdersStore = create<OrdersState>((set) => ({
   selectedOrderId: null,
   detailOpen: false,
   createOpen: false,
-  viewMode: 'cards',
-  statusFilter: '',
+  viewMode: 'table',
+  statusFilter: 'all',
+  searchQuery: '',
+  dateFilter: 'all',
+  page: 1,
+  pageSize: 10,
+  totalOrders: 0,
   setOrders: (orders) => set({ orders }),
   setLoading: (loading) => set({ loading }),
   setStats: (stats) => set({ stats }),
@@ -123,7 +142,12 @@ export const useOrdersStore = create<OrdersState>((set) => ({
   setDetailOpen: (open) => set({ detailOpen: open }),
   setCreateOpen: (open) => set({ createOpen: open }),
   setViewMode: (mode) => set({ viewMode: mode }),
-  setStatusFilter: (filter) => set({ statusFilter: filter }),
+  setStatusFilter: (filter) => set({ statusFilter: filter, page: 1 }),
+  setSearchQuery: (query) => set({ searchQuery: query, page: 1 }),
+  setDateFilter: (filter) => set({ dateFilter: filter, page: 1 }),
+  setPage: (page) => set({ page }),
+  setPageSize: (pageSize) => set({ pageSize, page: 1 }),
+  setTotalOrders: (totalOrders) => set({ totalOrders }),
   openDetail: (id) => set({ selectedOrderId: id, detailOpen: true }),
   openCreate: () => set({ createOpen: true }),
   closeDetail: () => set({ detailOpen: false, selectedOrderId: null }),
