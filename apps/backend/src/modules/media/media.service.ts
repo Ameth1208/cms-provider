@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, Inject } from '@nestjs/common'
 import { v4 as uuid } from 'uuid'
-import { PrismaService } from '../../common/prisma.service'
+import { PrismaService } from '@common/prisma.service'
 import { IStorageProvider, STORAGE_PROVIDER_TOKEN } from '../../common/storage/storage.interface'
 
 interface UploadedFile {
