@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { createHash, randomBytes } from 'crypto'
-import { PrismaService } from '../../common/prisma.service'
+import { PrismaService } from '@common/prisma.service'
 
 function generateApiKey(): string {
   return 'cmw_' + randomBytes(32).toString('hex')
