@@ -1,54 +1,33 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common'
-import { PrismaService } from '../../common/prisma.service'
+import { Injectable } from '@nestjs/common'
+import { FindAllCustomersUseCase } from './use-cases/find-all-customers.use-case'
+import { FindOneCustomerUseCase } from './use-cases/find-one-customer.use-case'
+import { CreateCustomerUseCase } from './use-cases/create-customer.use-case'
+import { UpdateCustomerUseCase } from './use-cases/update-customer.use-case'
+import { RemoveCustomerUseCase } from './use-cases/remove-customer.use-case'
+import { AddCustomerAddressUseCase } from './use-cases/add-customer-address.use-case'
+import { RemoveCustomerAddressUseCase } from './use-cases/remove-customer-address.use-case'
 
 @Injectable()
 export class CustomersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private findAllUseCase: FindAllCustomersUseCase,
+    private findOneUseCase: FindOneCustomerUseCase,
+    private createUseCase: CreateCustomerUseCase,
+    private updateUseCase: UpdateCustomerUseCase,
+    private removeUseCase: RemoveCustomerUseCase,
+    private addAddressUseCase: AddCustomerAddressUseCase,
+    private removeAddressUseCase: RemoveCustomerAddressUseCase,
+  ) {}
 
-  async findAll(organizationId: string, query?: { search?: string }) {
-    const where: any = { organizationId }
-    
-    if (query?.search) {
-      where.OR = [
-        { name: { contains: query.search, mode: 'insensitive' } },
-        { email: { contains: query.search, mode: 'insensitive' } },
-        { document: { contains: query.search, mode: 'insensitive' } },
-        { phone: { contains: query.search, mode: 'insensitive' } },
-      ]
-    }
-
-    return this.prisma.customer.findMany({
-      where,
-      include: { 
-        addresses: true,
-        _count: { select: { orders: true } }
-      },
-      orderBy: { createdAt: 'desc' },
-    })
+  findAll(organizationId: string, query?: { search?: string }) {
+    return this.findAllUseCase.execute(organizationId, query)
   }
 
-  async findOne(id: string, organizationId: string) {
-    const customer = await this.prisma.customer.findFirst({
-      where: { id, organizationId },
-      include: { 
-        addresses: true,
-        orders: {
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-          select: {
-            id: true,
-            status: true,
-            total: true,
-            createdAt: true,
-          }
-        }
-      },
-    })
-    if (!customer) throw new NotFoundException('Customer not found')
-    return customer
+  findOne(id: string, organizationId: string) {
+    return this.findOneUseCase.execute(id, organizationId)
   }
 
-  async create(data: {
+  create(data: {
     name: string
     email: string
     phone?: string
@@ -65,22 +44,10 @@ export class CustomersService {
       isDefault?: boolean
     }[]
   }, organizationId: string) {
-    const existing = await this.prisma.customer.findUnique({
-      where: { email_organizationId: { email: data.email, organizationId } }
-    })
-    if (existing) throw new ConflictException('Customer with this email already exists')
-
-    return this.prisma.customer.create({
-      data: {
-        ...data,
-        organizationId,
-        addresses: data.addresses ? { create: data.addresses } : undefined,
-      },
-      include: { addresses: true },
-    })
+    return this.createUseCase.execute(data, organizationId)
   }
 
-  async update(id: string, data: {
+  update(id: string, data: {
     name?: string
     email?: string
     phone?: string
@@ -89,36 +56,14 @@ export class CustomersService {
     notes?: string
     active?: boolean
   }, organizationId: string) {
-    const customer = await this.prisma.customer.findFirst({
-      where: { id, organizationId }
-    })
-    if (!customer) throw new NotFoundException('Customer not found')
-
-    if (data.email && data.email !== customer.email) {
-      const existing = await this.prisma.customer.findUnique({
-        where: { email_organizationId: { email: data.email, organizationId } }
-      })
-      if (existing) throw new ConflictException('Customer with this email already exists')
-    }
-
-    return this.prisma.customer.update({
-      where: { id },
-      data,
-      include: { addresses: true },
-    })
+    return this.updateUseCase.execute(id, data, organizationId)
   }
 
-  async remove(id: string, organizationId: string) {
-    const customer = await this.prisma.customer.findFirst({
-      where: { id, organizationId }
-    })
-    if (!customer) throw new NotFoundException('Customer not found')
-
-    await this.prisma.customer.delete({ where: { id } })
-    return { success: true }
+  remove(id: string, organizationId: string) {
+    return this.removeUseCase.execute(id, organizationId)
   }
 
-  async addAddress(customerId: string, data: {
+  addAddress(customerId: string, data: {
     label: string
     street: string
     city: string
@@ -127,32 +72,10 @@ export class CustomersService {
     country?: string
     isDefault?: boolean
   }, organizationId: string) {
-    const customer = await this.prisma.customer.findFirst({
-      where: { id: customerId, organizationId }
-    })
-    if (!customer) throw new NotFoundException('Customer not found')
-
-    if (data.isDefault) {
-      await this.prisma.customerAddress.updateMany({
-        where: { customerId },
-        data: { isDefault: false }
-      })
-    }
-
-    return this.prisma.customerAddress.create({
-      data: { ...data, customerId }
-    })
+    return this.addAddressUseCase.execute(customerId, data, organizationId)
   }
 
-  async removeAddress(customerId: string, addressId: string, organizationId: string) {
-    const customer = await this.prisma.customer.findFirst({
-      where: { id: customerId, organizationId }
-    })
-    if (!customer) throw new NotFoundException('Customer not found')
-
-    await this.prisma.customerAddress.delete({
-      where: { id: addressId }
-    })
-    return { success: true }
+  removeAddress(customerId: string, addressId: string, organizationId: string) {
+    return this.removeAddressUseCase.execute(customerId, addressId, organizationId)
   }
 }
