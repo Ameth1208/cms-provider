@@ -43,26 +43,6 @@ interface NavGroup {
   items: NavItem[]
 }
 
-/* ─── Persisted collapse state ─── */
-
-function useSidebarCollapse() {
-  const [collapsed, setCollapsed] = useState(false)
-
-  useEffect(() => {
-    const saved = localStorage.getItem('sidebar:collapsed')
-    if (saved) setCollapsed(saved === 'true')
-  }, [])
-
-  const toggle = () => {
-    setCollapsed((prev) => {
-      localStorage.setItem('sidebar:collapsed', String(!prev))
-      return !prev
-    })
-  }
-
-  return { collapsed, toggle }
-}
-
 /* ─── Tooltip for collapsed mode ─── */
 
 function SidebarTooltip({ label, children }: { label: string; children: React.ReactNode }) {
@@ -82,13 +62,16 @@ function SidebarTooltip({ label, children }: { label: string; children: React.Re
 
 /* ─── Main ─── */
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  collapsed: boolean
+}
+
+export function AppSidebar({ collapsed }: AppSidebarProps) {
   const pathname = usePathname()
   const { user, logout, token } = useAuth()
   const { theme, setTheme } = useTheme()
   const { locale, setLocale } = useLocaleStore()
   const { t } = useTranslation()
-  const { collapsed, toggle } = useSidebarCollapse()
   const { settings, fetchSettings } = useSettingsStore()
   const { unreadCount } = useNotificationsStore()
 
@@ -333,14 +316,6 @@ export function AppSidebar() {
             )}
           </Link>
 
-          {!collapsed && (
-            <button
-              onClick={toggle}
-              className="ml-auto h-7 w-7 flex items-center justify-center rounded-md hover:bg-accent transition-colors duration-200 shrink-0"
-            >
-              <Icon icon="lucide:panel-left-close" className="h-4 w-4 text-muted-foreground" />
-            </button>
-          )}
         </div>
 
         {/* ─── Nav ─── */}
@@ -384,15 +359,6 @@ export function AppSidebar() {
 
         {/* ─── Footer ─── */}
         <div className="shrink-0 px-2.5 pb-3 pt-2">
-          {collapsed && (
-            <button
-              onClick={toggle}
-              className="w-full flex items-center justify-center py-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors duration-200 mb-1"
-            >
-              <Icon icon="lucide:panel-right-open" className="h-4 w-4" />
-            </button>
-          )}
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
