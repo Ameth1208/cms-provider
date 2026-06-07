@@ -172,6 +172,7 @@
   "no_tags": "Create tags first in Catalog > Tags",
   "edit": "Edit",
   "delete": "Delete",
+  "confirm_delete_item": "Delete this item?",
   "empty_desc": "Create your first product to get started",
   "filters": "Filters",
   "clear_filters": "Clear filters",

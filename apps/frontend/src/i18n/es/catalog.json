@@ -172,6 +172,7 @@
   "no_tags": "Crea tags primero en Catálogo > Tags",
   "edit": "Editar",
   "delete": "Eliminar",
+  "confirm_delete_item": "¿Eliminar este artículo?",
   "empty_desc": "Crea tu primer producto para empezar",
   "filters": "Filtros",
   "clear_filters": "Limpiar filtros",
