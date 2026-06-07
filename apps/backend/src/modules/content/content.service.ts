@@ -1,83 +1,76 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
-import { PrismaService } from '../../common/prisma.service'
+import { Injectable } from '@nestjs/common'
+import { FindSectionsUseCase } from './use-cases/find-sections.use-case'
+import { FindSectionUseCase } from './use-cases/find-section.use-case'
+import { CreateSectionUseCase } from './use-cases/create-section.use-case'
+import { UpdateSectionUseCase } from './use-cases/update-section.use-case'
+import { DeleteSectionUseCase } from './use-cases/delete-section.use-case'
+import { CreateSlideUseCase } from './use-cases/create-slide.use-case'
+import { UpdateSlideUseCase } from './use-cases/update-slide.use-case'
+import { DeleteSlideUseCase } from './use-cases/delete-slide.use-case'
+import { AddProductToSectionUseCase } from './use-cases/add-product-to-section.use-case'
+import { RemoveProductFromSectionUseCase } from './use-cases/remove-product-from-section.use-case'
+import { ReorderSpotlightsUseCase } from './use-cases/reorder-spotlights.use-case'
+import { FindBannersUseCase } from './use-cases/find-banners.use-case'
+import { CreateBannerUseCase } from './use-cases/create-banner.use-case'
+import { UpdateBannerUseCase } from './use-cases/update-banner.use-case'
+import { DeleteBannerUseCase } from './use-cases/delete-banner.use-case'
+import { GetPublicContentUseCase } from './use-cases/get-public-content.use-case'
 
 @Injectable()
 export class ContentService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private findSectionsUseCase: FindSectionsUseCase,
+    private findSectionUseCase: FindSectionUseCase,
+    private createSectionUseCase: CreateSectionUseCase,
+    private updateSectionUseCase: UpdateSectionUseCase,
+    private deleteSectionUseCase: DeleteSectionUseCase,
+    private createSlideUseCase: CreateSlideUseCase,
+    private updateSlideUseCase: UpdateSlideUseCase,
+    private deleteSlideUseCase: DeleteSlideUseCase,
+    private addProductToSectionUseCase: AddProductToSectionUseCase,
+    private removeProductFromSectionUseCase: RemoveProductFromSectionUseCase,
+    private reorderSpotlightsUseCase: ReorderSpotlightsUseCase,
+    private findBannersUseCase: FindBannersUseCase,
+    private createBannerUseCase: CreateBannerUseCase,
+    private updateBannerUseCase: UpdateBannerUseCase,
+    private deleteBannerUseCase: DeleteBannerUseCase,
+    private getPublicContentUseCase: GetPublicContentUseCase,
+  ) {}
 
   // ─── Sections ───
 
-  async findSections(organizationId: string, type?: string) {
-    return this.prisma.homepageSection.findMany({
-      where: { organizationId, ...(type ? { type } : {}) },
-      include: {
-        slides: { orderBy: { order: 'asc' } },
-        spotlights: {
-          orderBy: { order: 'asc' },
-          include: { catalogItem: { select: { id: true, name: true, slug: true, price: true, media: { take: 1 } } } },
-        },
-        banners: { orderBy: { order: 'asc' } },
-      },
-      orderBy: { order: 'asc' },
-    })
+  findSections(organizationId: string, type?: string) {
+    return this.findSectionsUseCase.execute(organizationId, type)
   }
 
-  async findSection(id: string, organizationId: string) {
-    const section = await this.prisma.homepageSection.findFirst({
-      where: { id, organizationId },
-      include: {
-        slides: { orderBy: { order: 'asc' } },
-        spotlights: {
-          orderBy: { order: 'asc' },
-          include: { catalogItem: { select: { id: true, name: true, slug: true, price: true, media: { take: 1 } } } },
-        },
-        banners: { orderBy: { order: 'asc' } },
-      },
-    })
-    if (!section) throw new NotFoundException('Section not found')
-    return section
+  findSection(id: string, organizationId: string) {
+    return this.findSectionUseCase.execute(id, organizationId)
   }
 
-  async createSection(data: {
+  createSection(data: {
     type: string
     title?: string
     order?: number
     active?: boolean
   }, organizationId: string) {
-    return this.prisma.homepageSection.create({
-      data: { ...data, organizationId },
-    })
+    return this.createSectionUseCase.execute(data, organizationId)
   }
 
-  async updateSection(id: string, data: {
+  updateSection(id: string, data: {
     title?: string
     order?: number
     active?: boolean
   }, organizationId: string) {
-    const section = await this.prisma.homepageSection.findFirst({
-      where: { id, organizationId },
-    })
-    if (!section) throw new NotFoundException('Section not found')
-
-    return this.prisma.homepageSection.update({
-      where: { id },
-      data,
-    })
+    return this.updateSectionUseCase.execute(id, data, organizationId)
   }
 
-  async deleteSection(id: string, organizationId: string) {
-    const section = await this.prisma.homepageSection.findFirst({
-      where: { id, organizationId },
-    })
-    if (!section) throw new NotFoundException('Section not found')
-
-    await this.prisma.homepageSection.delete({ where: { id } })
-    return { deleted: true }
+  deleteSection(id: string, organizationId: string) {
+    return this.deleteSectionUseCase.execute(id, organizationId)
   }
 
   // ─── Slides ───
 
-  async createSlide(data: {
+  createSlide(data: {
     sectionId: string
     imageUrl: string
     title?: string
@@ -90,15 +83,10 @@ export class ContentService {
     textColor?: string
     order?: number
   }, organizationId: string) {
-    const section = await this.prisma.homepageSection.findFirst({
-      where: { id: data.sectionId, organizationId },
-    })
-    if (!section) throw new NotFoundException('Section not found')
-
-    return this.prisma.homepageSlide.create({ data })
+    return this.createSlideUseCase.execute(data, organizationId)
   }
 
-  async updateSlide(id: string, data: {
+  updateSlide(id: string, data: {
     imageUrl?: string
     title?: string
     subtitle?: string
@@ -111,91 +99,38 @@ export class ContentService {
     order?: number
     active?: boolean
   }, organizationId: string) {
-    const slide = await this.prisma.homepageSlide.findFirst({
-      where: { id, section: { organizationId } },
-    })
-    if (!slide) throw new NotFoundException('Slide not found')
-
-    return this.prisma.homepageSlide.update({ where: { id }, data })
+    return this.updateSlideUseCase.execute(id, data, organizationId)
   }
 
-  async deleteSlide(id: string, organizationId: string) {
-    const slide = await this.prisma.homepageSlide.findFirst({
-      where: { id, section: { organizationId } },
-    })
-    if (!slide) throw new NotFoundException('Slide not found')
-
-    await this.prisma.homepageSlide.delete({ where: { id } })
-    return { deleted: true }
+  deleteSlide(id: string, organizationId: string) {
+    return this.deleteSlideUseCase.execute(id, organizationId)
   }
 
   // ─── Product Spotlights ───
 
-  async addProductToSection(data: {
+  addProductToSection(data: {
     sectionId: string
     catalogItemId: string
     order?: number
   }, organizationId: string) {
-    const section = await this.prisma.homepageSection.findFirst({
-      where: { id: data.sectionId, organizationId },
-    })
-    if (!section) throw new NotFoundException('Section not found')
-
-    const item = await this.prisma.catalogItem.findFirst({
-      where: { id: data.catalogItemId, organizationId },
-    })
-    if (!item) throw new NotFoundException('Catalog item not found')
-
-    return this.prisma.homepageProductSpotlight.create({
-      data: {
-        sectionId: data.sectionId,
-        catalogItemId: data.catalogItemId,
-        order: data.order ?? 0,
-      },
-    })
+    return this.addProductToSectionUseCase.execute(data, organizationId)
   }
 
-  async removeProductFromSection(id: string, organizationId: string) {
-    const spotlight = await this.prisma.homepageProductSpotlight.findFirst({
-      where: { id, section: { organizationId } },
-    })
-    if (!spotlight) throw new NotFoundException('Spotlight not found')
-
-    await this.prisma.homepageProductSpotlight.delete({ where: { id } })
-    return { deleted: true }
+  removeProductFromSection(id: string, organizationId: string) {
+    return this.removeProductFromSectionUseCase.execute(id, organizationId)
   }
 
-  async reorderSpotlights(sectionId: string, orders: { id: string; order: number }[], organizationId: string) {
-    const section = await this.prisma.homepageSection.findFirst({
-      where: { id: sectionId, organizationId },
-    })
-    if (!section) throw new NotFoundException('Section not found')
-
-    await this.prisma.$transaction(
-      orders.map((o) =>
-        this.prisma.homepageProductSpotlight.update({
-          where: { id: o.id },
-          data: { order: o.order },
-        }),
-      ),
-    )
-
-    return this.prisma.homepageProductSpotlight.findMany({
-      where: { sectionId },
-      orderBy: { order: 'asc' },
-    })
+  reorderSpotlights(sectionId: string, orders: { id: string; order: number }[], organizationId: string) {
+    return this.reorderSpotlightsUseCase.execute(sectionId, orders, organizationId)
   }
 
   // ─── Banners ───
 
-  async findBanners(organizationId: string, position?: string) {
-    return this.prisma.homepageBanner.findMany({
-      where: { organizationId, ...(position ? { position } : {}) },
-      orderBy: { order: 'asc' },
-    })
+  findBanners(organizationId: string, position?: string) {
+    return this.findBannersUseCase.execute(organizationId, position)
   }
 
-  async createBanner(data: {
+  createBanner(data: {
     sectionId?: string
     imageUrl?: string
     title?: string
@@ -204,12 +139,10 @@ export class ContentService {
     position?: string
     order?: number
   }, organizationId: string) {
-    return this.prisma.homepageBanner.create({
-      data: { ...data, organizationId },
-    })
+    return this.createBannerUseCase.execute(data, organizationId)
   }
 
-  async updateBanner(id: string, data: {
+  updateBanner(id: string, data: {
     sectionId?: string | null
     imageUrl?: string
     title?: string
@@ -219,57 +152,16 @@ export class ContentService {
     order?: number
     active?: boolean
   }, organizationId: string) {
-    const banner = await this.prisma.homepageBanner.findFirst({
-      where: { id, organizationId },
-    })
-    if (!banner) throw new NotFoundException('Banner not found')
-
-    return this.prisma.homepageBanner.update({ where: { id }, data })
+    return this.updateBannerUseCase.execute(id, data, organizationId)
   }
 
-  async deleteBanner(id: string, organizationId: string) {
-    const banner = await this.prisma.homepageBanner.findFirst({
-      where: { id, organizationId },
-    })
-    if (!banner) throw new NotFoundException('Banner not found')
-
-    await this.prisma.homepageBanner.delete({ where: { id } })
-    return { deleted: true }
+  deleteBanner(id: string, organizationId: string) {
+    return this.deleteBannerUseCase.execute(id, organizationId)
   }
 
   // ─── Public API (for storefront) ───
 
-  async getPublicContent(organizationId: string) {
-    return this.prisma.homepageSection.findMany({
-      where: { organizationId, active: true },
-      include: {
-        slides: {
-          where: { active: true },
-          orderBy: { order: 'asc' },
-        },
-        spotlights: {
-          orderBy: { order: 'asc' },
-          include: {
-            catalogItem: {
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-                price: true,
-                comparePrice: true,
-                discountType: true,
-                discountValue: true,
-                media: { take: 1 },
-              },
-            },
-          },
-        },
-        banners: {
-          where: { active: true },
-          orderBy: { order: 'asc' },
-        },
-      },
-      orderBy: { order: 'asc' },
-    })
+  getPublicContent(organizationId: string) {
+    return this.getPublicContentUseCase.execute(organizationId)
   }
 }
