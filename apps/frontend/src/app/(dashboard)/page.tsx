@@ -7,6 +7,7 @@ import { api } from '@/lib/api-client'
 import { Card, CardContent } from '@/components/ui/card'
 import { PageHeader } from '@/components/page-header'
 import { useTranslation } from '@/i18n/use-translation'
+import { formatPrice } from '@/lib/utils'
 
 export default function DashboardPage() {
   const { token } = useAuth()
@@ -24,7 +25,7 @@ export default function DashboardPage() {
   const cards = [
     { label: 'Total Pedidos', value: stats?.totalOrders ?? '—', icon: 'lucide:shopping-cart' },
     { label: 'Pendientes', value: stats?.pendingOrders ?? '—', icon: 'lucide:clock' },
-    { label: 'Ingresos', value: stats ? `$${stats.totalRevenue.toFixed(2)}` : '—', icon: 'lucide:trending-up' },
+    { label: 'Ingresos', value: stats ? formatPrice(stats.totalRevenue) : '—', icon: 'lucide:trending-up' },
   ]
 
   return (
