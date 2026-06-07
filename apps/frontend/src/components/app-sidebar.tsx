@@ -64,9 +64,10 @@ function SidebarTooltip({ label, children }: { label: string; children: React.Re
 
 interface AppSidebarProps {
   collapsed: boolean
+  onToggle: () => void
 }
 
-export function AppSidebar({ collapsed }: AppSidebarProps) {
+export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const pathname = usePathname()
   const { user, logout, token } = useAuth()
   const { theme, setTheme } = useTheme()
@@ -294,9 +295,10 @@ export function AppSidebar({ collapsed }: AppSidebarProps) {
       >
         {/* ─── Header ─── */}
         <div className="shrink-0 flex items-center h-14 px-3.5">
-          <Link
-            href="/"
-            className={`flex items-center gap-2.5 min-w-0 ${collapsed ? 'justify-center w-full' : ''}`}
+          <button
+            onClick={onToggle}
+            className={`flex items-center gap-2.5 min-w-0 hover:opacity-80 transition-opacity duration-200 ${collapsed ? 'justify-center w-full' : ''}`}
+            aria-label={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
           >
             {settings.logoUrl ? (
               <img 
@@ -314,7 +316,7 @@ export function AppSidebar({ collapsed }: AppSidebarProps) {
                 {settings.companyName || user?.organizationName || 'CMS'}
               </span>
             )}
-          </Link>
+          </button>
         </div>
 
         {/* ─── Nav ─── */}
