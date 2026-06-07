@@ -348,6 +348,7 @@ model Order {
   tax               Float          @default(0)
   shippingCost      Float          @default(0)
   total             Float
+  overpaidAmount    Float          @default(0) // Saldo a favor del cliente
   
   // Customer (puede ser registrado o guest)
   customerId        String?
@@ -381,6 +382,11 @@ model Order {
   deliveryTimeWindow  String?        // JSON: {from: "09:00", to: "14:00"}
   attemptCount        Int            @default(0)
   proofOfDelivery     String?        // JSON: {photoUrl, signatureUrl, deliveredTo}
+  
+  // Cancellation tracking
+  cancelledAt         DateTime?
+  cancellationReason  String?
+  refundedAmount      Float          @default(0) // Monto reembolsado por cancelación
   
   organizationId      String
   createdAt           DateTime       @default(now())
