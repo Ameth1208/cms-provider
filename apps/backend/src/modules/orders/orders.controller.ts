@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards } from '@nestjs/common'
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { OrdersService } from './orders.service'
+import { OrdersPaymentsService } from './services/orders-payments.service'
+import { OrdersCancellationService } from './services/orders-cancellation.service'
 import { HybridAuthGuard } from '../../common/guards/hybrid-auth.guard'
 import { PermissionGuard } from '../../common/guards/permission.guard'
 import { RequirePermission } from '../../common/decorators/permission.decorator'
@@ -10,7 +12,11 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator'
 @ApiBearerAuth()
 @Controller('orders')
 export class OrdersController {
-  constructor(private orders: OrdersService) {}
+  constructor(
+    private orders: OrdersService,
+    private payments: OrdersPaymentsService,
+    private cancellation: OrdersCancellationService,
+  ) {}
 
   @Get()
   @UseGuards(HybridAuthGuard, PermissionGuard)
@@ -18,8 +24,20 @@ export class OrdersController {
   findAll(
     @CurrentUser('organizationId') orgId: string,
     @Query('status') status?: string,
+    @Query('search') search?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
   ) {
-    return this.orders.findAll(orgId, { status })
+    return this.orders.findAll(orgId, { 
+      status, 
+      search, 
+      from, 
+      to, 
+      page: page ? parseInt(page) : undefined, 
+      pageSize: pageSize ? parseInt(pageSize) : undefined 
+    })
   }
 
   @Get('stats')
@@ -119,5 +137,27 @@ export class OrdersController {
     @CurrentUser('organizationId') orgId: string,
   ) {
     return this.orders.unassignDriver(id, orgId)
+  }
+
+  @Post(':id/payments')
+  @UseGuards(HybridAuthGuard, PermissionGuard)
+  @RequirePermission('orders', 'update')
+  addPayment(
+    @Param('id') id: string,
+    @Body() body: { method: string; amount: number; reference?: string },
+    @CurrentUser('organizationId') orgId: string,
+  ) {
+    return this.payments.addPayment(id, body, orgId)
+  }
+
+  @Post(':id/cancel')
+  @UseGuards(HybridAuthGuard, PermissionGuard)
+  @RequirePermission('orders', 'update')
+  cancelOrder(
+    @Param('id') id: string,
+    @Body() body: { reason?: string },
+    @CurrentUser('organizationId') orgId: string,
+  ) {
+    return this.cancellation.cancelOrder(id, body, orgId)
   }
 }
