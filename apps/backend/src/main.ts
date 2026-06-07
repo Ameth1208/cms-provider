@@ -8,25 +8,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
   app.setGlobalPrefix('api')
-  const allowedOrigins = process.env.FRONTEND_URL
-    ? [process.env.FRONTEND_URL]
-    : []
-
-  // En desarrollo, aceptar cualquier localhost/127.0.0.1
-  const isLocalhost = (origin: string) =>
-    /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)
-
+  // CORS completamente abierto - API pública para múltiples frontends
   app.enableCors({
-    origin: (origin, callback) => {
-      // Permitir requests sin origin (Postman, server-to-server, mobile apps)
-      if (!origin) return callback(null, true)
-      if (allowedOrigins.includes(origin)) return callback(null, true)
-      if (isLocalhost(origin)) return callback(null, true)
-      callback(new Error(`CORS blocked: ${origin}`))
-    },
-    credentials: false,
+    origin: true, // Permitir cualquier origen
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'api-key'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'api-key', 'X-Requested-With', 'Accept', 'Origin'],
   })
 
   app.useGlobalPipes(
