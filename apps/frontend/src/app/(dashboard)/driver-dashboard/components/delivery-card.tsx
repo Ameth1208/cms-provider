@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Icon } from '@iconify/react'
 import { useTranslation } from '@/i18n/use-translation'
+import { formatPrice } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -101,7 +102,7 @@ export function DeliveryCard({ delivery, updating, onUpdateStatus }: Props) {
         )}
 
         <div className="flex items-center justify-between">
-          <p className="font-medium">${delivery.order.total.toFixed(2)}</p>
+          <p className="font-medium">{formatPrice(delivery.order.total)}</p>
 
           {delivery.status === 'ASSIGNED' && (
             <Button
