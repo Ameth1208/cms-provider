@@ -2,6 +2,7 @@
 
 import { Icon } from '@iconify/react'
 import { useTranslation } from '@/i18n/use-translation'
+import { formatPrice } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -54,7 +55,7 @@ export function ZonesTable({ zones, onDelete }: Props) {
                     <span className="font-medium">{zone.name}</span>
                   </div>
                 </TableCell>
-                <TableCell>${zone.shippingCost.toFixed(2)}</TableCell>
+                <TableCell>{formatPrice(zone.shippingCost)}</TableCell>
                 <TableCell>{zone.estimatedDays} {t('days')}</TableCell>
                 <TableCell className="text-right">
                   <Button

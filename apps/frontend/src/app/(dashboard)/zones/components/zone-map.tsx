@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { MapContainer, TileLayer, Polygon, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
+import { formatPrice } from '@/lib/utils'
 
 interface Zone {
   id: string
@@ -85,7 +86,7 @@ export function ZoneMap({ zones, center = [-34.6037, -58.3816], zoom = 12, heigh
               <div className="p-1">
                 <p className="font-medium">{zone.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  Envío: ${zone.shippingCost.toFixed(2)} · {zone.estimatedDays} días
+                  Envío: {formatPrice(zone.shippingCost)} · {zone.estimatedDays} días
                 </p>
               </div>
             </Popup>
