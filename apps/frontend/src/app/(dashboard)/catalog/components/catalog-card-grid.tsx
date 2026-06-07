@@ -6,6 +6,8 @@ import { Icon } from '@iconify/react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/i18n/use-translation'
+import { useConfirm } from '@/components/confirm-dialog'
+import { formatPrice } from '@/lib/utils'
 import { useCatalog } from '../hooks/use-catalog'
 import { useCatalogFilters } from '../hooks/use-catalog-filters'
 import type { CatalogItem } from '@cms/shared'
@@ -14,6 +16,19 @@ export function CatalogCardGrid() {
   const { t } = useTranslation()
   const { deleteItem } = useCatalog()
   const { filteredItems } = useCatalogFilters()
+  const { confirm, dialog } = useConfirm()
+
+  const handleDelete = async (item: CatalogItem) => {
+    const confirmed = await confirm({
+      title: t('confirm_delete_item'),
+      message: `${t('delete')} "${item.name}"? ${t('action_cannot_be_undone') || ''}`,
+      confirmText: t('delete'),
+      cancelText: t('cancel'),
+      variant: 'destructive',
+    })
+    if (!confirmed) return
+    await deleteItem(item.id)
+  }
 
   if (filteredItems.length === 0) {
     return (
@@ -34,15 +49,18 @@ export function CatalogCardGrid() {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-      {filteredItems.map((item) => (
-        <CatalogCard key={item.id} item={item} onDelete={deleteItem} />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+        {filteredItems.map((item) => (
+          <CatalogCard key={item.id} item={item} onDelete={handleDelete} />
+        ))}
+      </div>
+      {dialog}
+    </>
   )
 }
 
-function CatalogCard({ item, onDelete }: { item: CatalogItem; onDelete: (id: string) => void }) {
+function CatalogCard({ item, onDelete }: { item: CatalogItem; onDelete: (item: CatalogItem) => void }) {
   const { t } = useTranslation()
   const router = useRouter()
   const firstImage = item.media?.find((m: any) => m.type === 'IMAGE')
@@ -79,7 +97,7 @@ function CatalogCard({ item, onDelete }: { item: CatalogItem; onDelete: (id: str
               <Icon icon="lucide:pencil" className="h-3.5 w-3.5" />
               {t('edit')}
             </Button>
-            <Button size="sm" variant="destructive" className="gap-1.5" onClick={(e) => { e.preventDefault(); onDelete(item.id) }}>
+            <Button size="sm" variant="destructive" className="gap-1.5" onClick={(e) => { e.preventDefault(); onDelete(item) }}>
               <Icon icon="lucide:trash-2" className="h-3.5 w-3.5" />
             </Button>
           </div>
@@ -100,7 +118,7 @@ function CatalogCard({ item, onDelete }: { item: CatalogItem; onDelete: (id: str
         {hasDiscount && (
           <div className="absolute bottom-2 left-2">
             <Badge className="bg-primary text-primary-foreground text-[10px] hover:opacity-90">
-              {item.discountType === 'PERCENTAGE' ? `-${item.discountValue}%` : `-$${item.discountValue}`}
+              {item.discountType === 'PERCENTAGE' ? `-${item.discountValue}%` : `-${formatPrice(item.discountValue)}`}
             </Badge>
           </div>
         )}
@@ -114,8 +132,8 @@ function CatalogCard({ item, onDelete }: { item: CatalogItem; onDelete: (id: str
         </Link>
 
         <div className="flex items-baseline gap-2">
-          <span className="text-base font-semibold">${finalPrice.toFixed(2)}</span>
-          {hasDiscount && <span className="text-xs text-muted-foreground line-through">${item.price.toFixed(2)}</span>}
+          <span className="text-base font-semibold">{formatPrice(finalPrice)}</span>
+          {hasDiscount && <span className="text-xs text-muted-foreground line-through">{formatPrice(item.price)}</span>}
         </div>
 
         {item.tags && item.tags.length > 0 && (

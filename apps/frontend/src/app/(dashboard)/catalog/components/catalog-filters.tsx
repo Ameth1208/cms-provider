@@ -2,6 +2,13 @@
 
 import { Icon } from '@iconify/react'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useCatalogStore } from '../store/catalog-store'
 import { useCatalogFilters } from '../hooks/use-catalog-filters'
 
@@ -68,17 +75,17 @@ export function CatalogFilters() {
         {categories.length > 0 && (
           <div className="flex items-center gap-1.5 max-w-[280px]">
             <Icon icon="lucide:folder" className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="h-7 px-2 rounded-md border-0 bg-transparent text-[11px] text-muted-foreground hover:text-foreground cursor-pointer focus:ring-0 focus:outline-none appearance-none pr-6"
-              style={{ backgroundImage: 'none' }}
-            >
-              <option value="ALL">Todas las categorías</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
+            <Select value={filterCategory} onValueChange={setFilterCategory}>
+              <SelectTrigger className="h-7 text-[11px] border-0 bg-transparent text-muted-foreground hover:text-foreground focus:ring-0 focus:ring-offset-0 px-2 py-0 w-auto min-w-[140px]">
+                <SelectValue placeholder="Todas las categorías" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Todas las categorías</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
 
@@ -87,17 +94,17 @@ export function CatalogFilters() {
         {tags.length > 0 && (
           <div className="flex items-center gap-1.5 max-w-[280px]">
             <Icon icon="lucide:tag" className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
-            <select
-              value={filterTag}
-              onChange={(e) => setFilterTag(e.target.value)}
-              className="h-7 px-2 rounded-md border-0 bg-transparent text-[11px] text-muted-foreground hover:text-foreground cursor-pointer focus:ring-0 focus:outline-none appearance-none pr-6"
-              style={{ backgroundImage: 'none' }}
-            >
-              <option value="ALL">Todas las etiquetas</option>
-              {tags.map((tag) => (
-                <option key={tag.id} value={tag.id}>{tag.name}</option>
-              ))}
-            </select>
+            <Select value={filterTag} onValueChange={setFilterTag}>
+              <SelectTrigger className="h-7 text-[11px] border-0 bg-transparent text-muted-foreground hover:text-foreground focus:ring-0 focus:ring-offset-0 px-2 py-0 w-auto min-w-[140px]">
+                <SelectValue placeholder="Todas las etiquetas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Todas las etiquetas</SelectItem>
+                {tags.map((tag) => (
+                  <SelectItem key={tag.id} value={tag.id}>{tag.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
 

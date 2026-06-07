@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { useCatalogFormStore } from '../../store/catalog-form-store'
 import { useTranslation } from '@/i18n/use-translation'
+import { formatPrice } from '@/lib/utils'
 
 const labelMap: Record<string, { labelKey: string; color: string }> = {
   new: { labelKey: 'new_label', color: 'bg-blue-500' },
@@ -37,7 +38,7 @@ export function ProductPreview() {
     form.discountType === 'PERCENTAGE'
       ? `-${form.discountValue}%`
       : form.discountType === 'FIXED'
-      ? `-$${form.discountValue}`
+      ? `-${formatPrice(form.discountValue)}`
       : ''
 
   const allMedia = [
@@ -128,9 +129,9 @@ export function ProductPreview() {
           </div>
 
           <div className="flex items-baseline gap-2 flex-wrap">
-            <p className="text-2xl font-medium">${finalPrice.toFixed(2)}</p>
+            <p className="text-2xl font-medium">{formatPrice(finalPrice)}</p>
             {form.comparePrice > 0 && form.comparePrice > finalPrice && (
-              <p className="text-sm text-muted-foreground line-through">${form.comparePrice.toFixed(2)}</p>
+              <p className="text-sm text-muted-foreground line-through">{formatPrice(form.comparePrice)}</p>
             )}
             {discountLabel && (
               <Badge className="bg-primary text-primary-foreground text-[10px] hover:opacity-90">{discountLabel}</Badge>

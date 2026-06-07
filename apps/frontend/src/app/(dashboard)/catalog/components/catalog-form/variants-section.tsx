@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { useCatalogFormStore } from '../../store/catalog-form-store'
 import { useTranslation } from '@/i18n/use-translation'
+import { formatPriceInput, handlePriceInput } from '@/lib/utils'
 
 const PRESET_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Única']
 
@@ -285,12 +286,13 @@ export function VariantsSection() {
                   <div className="space-y-1">
                     <Label className="text-[10px] text-muted-foreground">{t('price_variant')}</Label>
                     <Input
-                      type="number"
-                      step="0.01"
-                      value={variant.price || ''}
-                      onChange={(e) =>
-                        updateVariant(variant.id!, { price: parseFloat(e.target.value) || 0 })
-                      }
+                      type="text"
+                      inputMode="numeric"
+                      value={formatPriceInput(variant.price)}
+                      onChange={(e) => {
+                        const { numeric } = handlePriceInput(e.target.value)
+                        updateVariant(variant.id!, { price: numeric })
+                      }}
                       className="h-8 text-xs"
                     />
                   </div>

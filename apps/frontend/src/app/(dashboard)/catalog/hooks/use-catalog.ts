@@ -38,8 +38,23 @@ export function useCatalog() {
 
   const deleteItem = useCallback(async (id: string) => {
     if (!token) return
-    await api.delete(`/catalog/${id}`, token)
-    useCatalogStore.getState().removeItem(id)
+    try {
+      await api.delete(`/catalog/${id}`, token)
+      useCatalogStore.getState().removeItem(id)
+      // Force refresh to ensure UI sync
+      const state = useCatalogStore.getState()
+      const params: Record<string, string> = {}
+      if (state.search) params.search = state.search
+      if (state.filterType !== 'ALL') params.type = state.filterType
+      if (state.filterCategory !== 'ALL') params.categoryId = state.filterCategory
+      if (state.filterTag !== 'ALL') params.tagId = state.filterTag
+      const qs = Object.keys(params).length ? '?' + new URLSearchParams(params).toString() : ''
+      const data = await api.get<any[]>(`/catalog${qs}`, token)
+      useCatalogStore.getState().setItems(data)
+    } catch (err) {
+      console.error('Failed to delete item:', err)
+      throw err
+    }
   }, [token])
 
   return { items, loading, fetchItems, createItem, editItem, deleteItem }

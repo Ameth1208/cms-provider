@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select'
 import { useCatalogFormStore } from '../../store/catalog-form-store'
 import { useTranslation } from '@/i18n/use-translation'
+import { formatPrice, formatPriceInput, handlePriceInput } from '@/lib/utils'
 
 interface Props {
   isNew: boolean
@@ -39,7 +40,7 @@ export function BasicInfoSection({ isNew }: Props) {
     form.discountType === 'PERCENTAGE'
       ? `-${form.discountValue}%`
       : form.discountType === 'FIXED'
-      ? `-$${form.discountValue}`
+      ? `-${formatPrice(form.discountValue)}`
       : ''
 
   return (
@@ -148,11 +149,13 @@ export function BasicInfoSection({ isNew }: Props) {
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
                 <Input
                   id="price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={form.price}
-                  onChange={(e) => setForm({ price: parseFloat(e.target.value) || 0 })}
+                  type="text"
+                  inputMode="numeric"
+                  value={formatPriceInput(form.price)}
+                  onChange={(e) => {
+                    const { numeric } = handlePriceInput(e.target.value)
+                    setForm({ price: numeric })
+                  }}
                   className="pl-7 text-lg"
                   required
                 />
@@ -164,11 +167,13 @@ export function BasicInfoSection({ isNew }: Props) {
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">$</span>
                 <Input
                   id="comparePrice"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={form.comparePrice || ''}
-                  onChange={(e) => setForm({ comparePrice: parseFloat(e.target.value) || 0 })}
+                  type="text"
+                  inputMode="numeric"
+                  value={formatPriceInput(form.comparePrice)}
+                  onChange={(e) => {
+                    const { numeric } = handlePriceInput(e.target.value)
+                    setForm({ comparePrice: numeric })
+                  }}
                   className="pl-7"
                   placeholder={t('price_compare_placeholder')}
                 />
@@ -240,10 +245,10 @@ export function BasicInfoSection({ isNew }: Props) {
             <div className="flex-1">
               <p className="text-xs text-muted-foreground mb-1">{t('final_price_preview')}</p>
               <div className="flex items-baseline gap-3">
-                <span className="text-3xl font-medium">${finalPrice.toFixed(2)}</span>
+                <span className="text-3xl font-medium">{formatPrice(finalPrice)}</span>
                 {form.comparePrice > 0 && form.comparePrice > finalPrice && (
                   <span className="text-lg text-muted-foreground line-through">
-                    ${form.comparePrice.toFixed(2)}
+                    {formatPrice(form.comparePrice)}
                   </span>
                 )}
                 {discountLabel && (
