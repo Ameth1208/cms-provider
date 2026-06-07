@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { PrismaService } from '../../common/prisma.service'
+import { PrismaService } from '@common/prisma.service'
 import { RouteStatus } from '@prisma/client'
 import { CreateRouteDto, UpdateRouteDto } from './dto/route.dto'
 

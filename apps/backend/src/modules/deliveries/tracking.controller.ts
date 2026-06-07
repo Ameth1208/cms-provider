@@ -1,6 +1,6 @@
 import { Controller, Get, Param } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
-import { PrismaService } from '../../common/prisma.service'
+import { PrismaService } from '@common/prisma.service'
 
 @ApiTags('Public Tracking')
 @Controller('tracking')
