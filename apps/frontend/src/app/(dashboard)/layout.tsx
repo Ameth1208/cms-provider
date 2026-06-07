@@ -7,18 +7,26 @@ import { AppSidebar } from '@/components/app-sidebar'
 import { NotificationsDropdown } from '@/components/notifications-dropdown'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSidebar } from '@/hooks/use-sidebar'
+import { useSettingsStore } from '@/store'
 import { Icon } from '@iconify/react'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, user } = useAuth()
   const router = useRouter()
   const { collapsed, toggle } = useSidebar()
+  const { settings, fetchSettings } = useSettingsStore()
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/login')
     }
   }, [isLoading, isAuthenticated, router])
+
+  useEffect(() => {
+    if (!settings.companyName) {
+      fetchSettings()
+    }
+  }, [settings.companyName, fetchSettings])
 
   if (isLoading) {
     return (
@@ -40,13 +48,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-sm border-b border-border px-6 py-3 lg:px-10 flex items-center justify-between">
           <button
             onClick={toggle}
-            className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent transition-colors duration-200"
+            className="flex items-center gap-2.5 min-w-0 hover:opacity-80 transition-opacity duration-200"
             aria-label={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
           >
-            <Icon 
-              icon={collapsed ? 'lucide:panel-right-open' : 'lucide:panel-left-close'} 
-              className="h-4 w-4 text-muted-foreground" 
-            />
+            {settings.logoUrl ? (
+              <img 
+                src={settings.logoUrl} 
+                alt={settings.companyName || 'Logo'} 
+                className="h-7 w-7 object-contain rounded-md shrink-0"
+              />
+            ) : (
+              <div className="h-7 w-7 rounded-md bg-foreground flex items-center justify-center shrink-0">
+                <Icon icon="lucide:hexagon" className="h-4 w-4 text-background" />
+              </div>
+            )}
+            <span className="text-[14px] font-medium tracking-tight text-foreground truncate">
+              {settings.companyName || user?.organizationName || 'CMS'}
+            </span>
           </button>
           <NotificationsDropdown />
         </div>
