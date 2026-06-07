@@ -1,48 +1,16 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { api } from '@/lib/api-client'
+import { usePaymentsStore } from '../store/payments-store'
+import type { Payment, PaymentStats } from '../store/payments-store'
 
-export interface Payment {
-  id: string
-  orderId: string
-  method: string
-  status: string
-  amount: number
-  currency: string
-  reference?: string
-  externalId?: string
-  paidAt?: string
-  refundedAt?: string
-  failureReason?: string
-  createdAt: string
-  updatedAt: string
-  order?: {
-    id: string
-    customerName: string
-    total: number
-    status: string
-  }
-}
-
-export interface PaymentStats {
-  totalPayments: number
-  totalPaid: number
-  totalRefunded: number
-  totalPending: number
-}
+export { type Payment, type PaymentStats }
 
 export function usePayments() {
   const { token } = useAuth()
-  const [payments, setPayments] = useState<Payment[]>([])
-  const [loading, setLoading] = useState(false)
-  const [stats, setStats] = useState<PaymentStats>({
-    totalPayments: 0,
-    totalPaid: 0,
-    totalRefunded: 0,
-    totalPending: 0,
-  })
+  const { setPayments, addPayment: addToStore, updatePayment: updateInStore, setLoading, setStats } = usePaymentsStore()
 
   const fetchPayments = useCallback(async (filters?: { status?: string; method?: string }) => {
     if (!token) return
@@ -54,13 +22,20 @@ export function usePayments() {
       
       const qs = params.toString()
       const data = await api.get<Payment[]>(`/payments${qs ? '?' + qs : ''}`, token)
-      setPayments(data)
-    } catch {
+      
+      if (Array.isArray(data)) {
+        setPayments(data)
+      } else {
+        console.error('Payments response is not an array:', data)
+        setPayments([])
+      }
+    } catch (error) {
+      console.error('Error fetching payments:', error)
       setPayments([])
     } finally {
       setLoading(false)
     }
-  }, [token])
+  }, [token, setPayments, setLoading])
 
   const fetchStats = useCallback(async () => {
     if (!token) return
@@ -70,25 +45,51 @@ export function usePayments() {
     } catch {
       // ignore
     }
-  }, [token])
+  }, [token, setStats])
 
   const updateStatus = useCallback(async (id: string, status: string) => {
     if (!token) return
-    await api.put(`/payments/${id}/status`, { status }, token)
-  }, [token])
+    try {
+      const updated = await api.put<Payment>(`/payments/${id}/status`, { status }, token)
+      updateInStore(updated)
+    } catch (error) {
+      console.error('Error updating payment status:', error)
+    }
+  }, [token, updateInStore])
 
   const refund = useCallback(async (id: string, amount: number) => {
     if (!token) return
-    await api.put(`/payments/${id}/refund`, { amount }, token)
-  }, [token])
+    try {
+      const updated = await api.put<Payment>(`/payments/${id}/refund`, { amount }, token)
+      updateInStore(updated)
+    } catch (error) {
+      console.error('Error refunding payment:', error)
+    }
+  }, [token, updateInStore])
+
+  const createPayment = useCallback(async (data: {
+    orderId: string
+    method: string
+    amount: number
+    currency?: string
+    reference?: string
+  }) => {
+    if (!token) return null
+    try {
+      const payment = await api.post<Payment>('/payments', data, token)
+      addToStore(payment)
+      return payment
+    } catch (error) {
+      console.error('Error creating payment:', error)
+      throw error
+    }
+  }, [token, addToStore])
 
   return {
-    payments,
-    loading,
-    stats,
     fetchPayments,
     fetchStats,
     updateStatus,
     refund,
+    createPayment,
   }
 }

@@ -4,16 +4,20 @@ import { useState } from 'react'
 import {
   CreditCard,
   CheckCircle,
-  XCircle,
-  AlertTriangle,
   DollarSign,
   ArrowLeftRight,
+  Package,
+  ArrowUpDown,
+  Eye,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/i18n/use-translation'
+import { formatPrice, formatDate } from '@/lib/utils'
+import { usePaymentsStore } from '../store/payments-store'
 import { usePayments } from '../hooks/use-payments'
+import { PaymentsSkeleton } from './payments-skeleton'
 
 const METHOD_ICONS: Record<string, any> = {
   CREDIT_CARD: CreditCard,
@@ -45,37 +49,70 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  PENDING: 'bg-amber-100 text-amber-700',
-  PAID: 'bg-emerald-100 text-emerald-700',
-  FAILED: 'bg-red-100 text-red-700',
-  REFUNDED: 'bg-gray-100 text-gray-700',
-  PARTIAL: 'bg-blue-100 text-blue-700',
+  PENDING: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  PAID: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+  FAILED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  REFUNDED: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300',
+  PARTIAL: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
 }
+
+type SortField = 'createdAt' | 'amount' | 'status' | 'method'
+type SortOrder = 'asc' | 'desc'
 
 export function PaymentsList() {
   const { t } = useTranslation()
-  const { payments, loading, updateStatus } = usePayments()
+  const { updateStatus } = usePayments()
+  const payments = usePaymentsStore((s) => s.payments)
+  const loading = usePaymentsStore((s) => s.loading)
   const [statusFilter, setStatusFilter] = useState('')
+  const [sortField, setSortField] = useState<SortField>('createdAt')
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortOrder('desc')
+    }
+  }
 
   const filtered = statusFilter 
     ? payments.filter((p) => p.status === statusFilter)
     : payments
 
+  const sorted = [...filtered].sort((a, b) => {
+    let comparison = 0
+    switch (sortField) {
+      case 'amount':
+        comparison = a.amount - b.amount
+        break
+      case 'createdAt':
+        comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        break
+      case 'status':
+        comparison = a.status.localeCompare(b.status)
+        break
+      case 'method':
+        comparison = a.method.localeCompare(b.method)
+        break
+    }
+    return sortOrder === 'asc' ? comparison : -comparison
+  })
+
   if (loading && payments.length === 0) {
-    return (
-      <Card>
-        <CardContent className="py-16 text-center text-muted-foreground">
-          {t('loading')}
-        </CardContent>
-      </Card>
-    )
+    return <PaymentsSkeleton />
   }
 
   if (payments.length === 0) {
     return (
       <Card>
         <CardContent className="py-16 text-center text-muted-foreground">
-          {t('payments_no_payments')}
+          <div className="space-y-4">
+            <DollarSign className="h-12 w-12 mx-auto opacity-20" />
+            <p className="text-lg font-medium">{t('payments_no_payments')}</p>
+            <p className="text-sm">No hay pagos registrados en el sistema</p>
+          </div>
         </CardContent>
       </Card>
     )
@@ -96,52 +133,124 @@ export function PaymentsList() {
         ))}
       </div>
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden border-border">
         <CardContent className="p-0">
-          <div className="divide-y">
-            {filtered.map((payment) => {
-              const MethodIcon = METHOD_ICONS[payment.method] || CreditCard
-              return (
-                <div key={payment.id} className="p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <MethodIcon className="h-5 w-5 text-primary" />
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    {t('method')}
+                  </th>
+                  <th 
+                    className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground"
+                    onClick={() => handleSort('status')}
+                  >
+                    <div className="flex items-center gap-1">
+                      {t('status')}
+                      <ArrowUpDown className="h-3 w-3" />
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{METHOD_LABELS[payment.method] || payment.method}</span>
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    {t('customer')}
+                  </th>
+                  <th 
+                    className="text-right px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground"
+                    onClick={() => handleSort('amount')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      {t('amount')}
+                      <ArrowUpDown className="h-3 w-3" />
+                    </div>
+                  </th>
+                  <th 
+                    className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground"
+                    onClick={() => handleSort('createdAt')}
+                  >
+                    <div className="flex items-center gap-1">
+                      {t('date')}
+                      <ArrowUpDown className="h-3 w-3" />
+                    </div>
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    {t('reference')}
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    {t('actions')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {sorted.map((payment) => {
+                  const MethodIcon = METHOD_ICONS[payment.method] || CreditCard
+                  return (
+                    <tr key={payment.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <MethodIcon className="h-4 w-4 text-primary" />
+                          </div>
+                          <span className="text-sm font-medium">
+                            {METHOD_LABELS[payment.method] || payment.method}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
                         <Badge variant="secondary" className={`text-[10px] ${STATUS_COLORS[payment.status]}`}>
                           {STATUS_LABELS[payment.status] || payment.status}
                         </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {t('payments_order')}: #{payment.orderId.slice(0, 8)} · {payment.order?.customerName}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(payment.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-lg font-semibold">${payment.amount.toFixed(2)} {payment.currency}</p>
-                      <p className="text-xs text-muted-foreground">{t('payments_reference')}: {payment.reference || 'N/A'}</p>
-                    </div>
-
-                    {payment.status === 'PENDING' && (
-                      <Button
-                        size="sm"
-                        onClick={() => updateStatus(payment.id, 'PAID')}
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        {t('payments_mark_paid')}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <Package className="h-3 w-3 text-muted-foreground" />
+                          <div>
+                            <p className="text-sm">{payment.order?.customerName || '-'}</p>
+                            <p className="text-xs text-muted-foreground">#{payment.orderId.slice(-6).toUpperCase()}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <p className="text-sm font-medium">{formatPrice(payment.amount)}</p>
+                        <p className="text-xs text-muted-foreground">{payment.currency}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-muted-foreground">
+                          {formatDate(payment.createdAt)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-xs text-muted-foreground">
+                          {payment.reference || '-'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0"
+                            title={t('view')}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {payment.status === 'PENDING' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                              onClick={() => updateStatus(payment.id, 'PAID')}
+                              title={t('payments_mark_paid')}
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
