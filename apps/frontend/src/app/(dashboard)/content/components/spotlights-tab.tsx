@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { ListSkeleton } from '@/components/skeletons'
 import { useContent, type Spotlight, type Section } from '../hooks/use-content'
+import { formatPrice } from '@/lib/utils'
 import { useCatalog } from '@/app/(dashboard)/catalog/hooks/use-catalog'
 
 export function SpotlightsTab() {
@@ -103,7 +104,7 @@ export function SpotlightsTab() {
                       )}
                       <div>
                         <p className="text-sm font-medium">{s.catalogItem?.name || 'Producto'}</p>
-                        <p className="text-xs text-muted-foreground">${s.catalogItem?.price}</p>
+                        <p className="text-xs text-muted-foreground">{formatPrice(s.catalogItem?.price ?? 0)}</p>
                       </div>
                     </div>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive" onClick={() => removeProduct(s.id)}>

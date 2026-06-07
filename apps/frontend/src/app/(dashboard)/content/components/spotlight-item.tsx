@@ -3,6 +3,7 @@
 import { Icon } from '@iconify/react'
 import { useContent, type Spotlight } from '../hooks/use-content'
 import { useConfirm } from '@/components/confirm-dialog'
+import { formatPrice } from '@/lib/utils'
 
 interface SpotlightItemProps {
   spotlight: Spotlight
@@ -40,7 +41,7 @@ export function SpotlightItem({ spotlight }: SpotlightItemProps) {
         )}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium truncate">{spotlight.catalogItem?.name || 'Producto'}</p>
-          <p className="text-xs text-muted-foreground">${spotlight.catalogItem?.price ?? 0}</p>
+          <p className="text-xs text-muted-foreground">{formatPrice(spotlight.catalogItem?.price ?? 0)}</p>
         </div>
         <button
           onClick={handleDelete}

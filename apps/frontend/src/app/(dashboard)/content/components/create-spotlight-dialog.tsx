@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useContent } from '../hooks/use-content'
 import { useCatalog } from '@/app/(dashboard)/catalog/hooks/use-catalog'
+import { formatPrice } from '@/lib/utils'
 
 interface Props {
   sectionId: string
@@ -84,7 +85,7 @@ export function CreateSpotlightDialog({ sectionId, open, onOpenChange, onSuccess
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{p.name}</p>
                     <p className={`text-xs ${selectedId === p.id ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                      ${p.price}
+                      {formatPrice(p.price)}
                     </p>
                   </div>
                   {selectedId === p.id && <Icon icon="lucide:check" className="h-4 w-4 shrink-0" />}
