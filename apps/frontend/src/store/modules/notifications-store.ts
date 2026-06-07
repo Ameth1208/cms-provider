@@ -32,7 +32,8 @@ export const useNotificationsStore = create<NotificationsState>((set, get) => ({
     set({ loading: true })
     try {
       // Fetch pending orders as notifications
-      const orders = await api.get<any[]>('/orders?status=PENDING&limit=10', token)
+      const response = await api.get<{ orders: any[]; total: number }>('/orders?status=PENDING&pageSize=10', token)
+      const orders = response.orders || []
       
       const orderNotifications: Notification[] = orders.map((order) => ({
         id: `order-${order.id}`,
