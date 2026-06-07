@@ -44,11 +44,19 @@ async function apiClient<T = any>(path: string, options: FetchOptions = {}): Pro
 
   if (!res.ok) {
     if (res.status === 401 && typeof window !== 'undefined') {
+      localStorage.removeItem('cms_auth')
       window.location.href = '/login'
       throw new ApiError('Sesión expirada', 401)
     }
     const error = await res.json().catch(() => ({ message: `HTTP ${res.status}` }))
     throw new ApiError(error.message || `HTTP ${res.status}`, res.status)
+  }
+
+  // Handle empty responses (e.g. 204 No Content or void returns)
+  const contentLength = res.headers.get('content-length')
+  const contentType = res.headers.get('content-type')
+  if (contentLength === '0' || !contentType?.includes('application/json')) {
+    return undefined as T
   }
 
   return res.json()
@@ -75,6 +83,7 @@ export const api = {
     }).then((res) => {
       if (!res.ok) {
         if (res.status === 401 && typeof window !== 'undefined') {
+          localStorage.removeItem('cms_auth')
           window.location.href = '/login'
           throw new ApiError('Sesión expirada', 401)
         }
@@ -100,6 +109,7 @@ export const api = {
     }).then((res) => {
       if (!res.ok) {
         if (res.status === 401 && typeof window !== 'undefined') {
+          localStorage.removeItem('cms_auth')
           window.location.href = '/login'
           throw new ApiError('Sesión expirada', 401)
         }
