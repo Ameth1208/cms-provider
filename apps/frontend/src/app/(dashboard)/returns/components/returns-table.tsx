@@ -2,6 +2,7 @@
 
 import { Icon } from '@iconify/react'
 import { useTranslation } from '@/i18n/use-translation'
+import { formatPrice } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -87,7 +88,7 @@ export function ReturnsTable({ returns, onUpdateStatus, onDelete }: Props) {
                 </TableCell>
                 <TableCell>{ret.quantity}</TableCell>
                 <TableCell>
-                  {ret.refundAmount ? `$${ret.refundAmount.toFixed(2)}` : '-'}
+                  {ret.refundAmount ? formatPrice(ret.refundAmount) : '-'}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
