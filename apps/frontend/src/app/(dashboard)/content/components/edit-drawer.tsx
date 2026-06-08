@@ -140,7 +140,7 @@ export function EditDrawer({ open, onOpenChange, item }: EditDrawerProps) {
                   <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: bgColor }}>
                     <div className="text-center">
                       <Icon icon="lucide:image" className="h-16 w-16 mx-auto text-white/30" />
-                      <p className="text-sm text-white/50 mt-2">Sin imagen de fondo</p>
+                      <p className="text-sm text-white/50 mt-2">{t('content_no_background_image')}</p>
                     </div>
                   </div>
                 )}
@@ -154,13 +154,13 @@ export function EditDrawer({ open, onOpenChange, item }: EditDrawerProps) {
                     className="text-3xl font-bold leading-tight"
                     style={{ color: textColor, textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}
                   >
-                    {slideTitle || 'Título del slide'}
+                    {slideTitle || t('content_slide_title_preview')}
                   </p>
                   <p 
                     className="text-lg mt-3 max-w-lg"
                     style={{ color: textColor, textShadow: '0 1px 4px rgba(0,0,0,0.3)', opacity: 0.9 }}
                   >
-                    {slideSubtitle || 'Subtítulo descriptivo'}
+                    {slideSubtitle || t('content_slide_subtitle_preview')}
                   </p>
                   {slideCtaText && (
                     <button
@@ -180,7 +180,7 @@ export function EditDrawer({ open, onOpenChange, item }: EditDrawerProps) {
               {/* Color Controls Row */}
               <div className="grid grid-cols-4 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Fondo</Label>
+                  <Label className="text-xs text-muted-foreground">{t('content_slide_bg_label')}</Label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
@@ -197,7 +197,7 @@ export function EditDrawer({ open, onOpenChange, item }: EditDrawerProps) {
                 </div>
                 
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Texto</Label>
+                  <Label className="text-xs text-muted-foreground">{t('content_slide_text_label')}</Label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
@@ -214,7 +214,7 @@ export function EditDrawer({ open, onOpenChange, item }: EditDrawerProps) {
                 </div>
                 
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Botón</Label>
+                  <Label className="text-xs text-muted-foreground">{t('content_slide_btn_label')}</Label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
@@ -231,7 +231,7 @@ export function EditDrawer({ open, onOpenChange, item }: EditDrawerProps) {
                 </div>
                 
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Texto botón</Label>
+                  <Label className="text-xs text-muted-foreground">{t('content_slide_btn_text_label')}</Label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
@@ -295,7 +295,7 @@ export function EditDrawer({ open, onOpenChange, item }: EditDrawerProps) {
                     <Input 
                       value={item.kind === 'slide' ? slideSubtitle : bannerDescription} 
                       onChange={(e) => item.kind === 'slide' ? setSlideSubtitle(e.target.value) : setBannerDescription(e.target.value)} 
-                      placeholder={item.kind === 'slide' ? t('content_slide_subtitle_placeholder') : 'Descripción'}
+                      placeholder={item.kind === 'slide' ? t('content_slide_subtitle_placeholder') : t('content_banner_description_label')}
                       className="h-9"
                     />
                   </div>
