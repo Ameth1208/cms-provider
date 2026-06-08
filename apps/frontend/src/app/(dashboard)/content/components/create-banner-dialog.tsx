@@ -156,8 +156,8 @@ export function CreateBannerDialog({ open, onOpenChange, onSuccess }: Props) {
                         <Icon icon={pos.icon} className={`h-4 w-4 ${position === pos.value ? 'text-primary' : 'text-muted-foreground'}`} />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">{pos.label}</p>
-                        <p className="text-xs text-muted-foreground">{pos.desc}</p>
+                        <p className="text-sm font-medium">{t(pos.labelKey)}</p>
+                        <p className="text-xs text-muted-foreground">{t(pos.descKey)}</p>
                       </div>
                     </button>
                   ))}
@@ -168,16 +168,16 @@ export function CreateBannerDialog({ open, onOpenChange, onSuccess }: Props) {
 
           <div className="pt-2 flex justify-end gap-2 border-t border-border mt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting} size="sm">
-              Cancelar
+              {t('content_cancel')}
             </Button>
             <Button onClick={handleSubmit} disabled={submitting} size="sm">
               {submitting ? (
                 <>
                   <Icon icon="lucide:loader-2" className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                  Creando...
+                  {t('content_creating')}
                 </>
               ) : (
-                'Crear banner'
+                t('content_create_banner_btn')
               )}
             </Button>
           </div>
