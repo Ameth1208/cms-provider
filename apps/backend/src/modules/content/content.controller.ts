@@ -55,6 +55,15 @@ export class ContentController {
     return this.content.deleteSection(id, orgId)
   }
 
+  @Post('sections/reorder')
+  @RequirePermission('content', 'update')
+  reorderSections(
+    @Body() body: { orders: { id: string; order: number }[] },
+    @CurrentUser('organizationId') orgId: string,
+  ) {
+    return this.content.reorderSections(body.orders, orgId)
+  }
+
   // ─── Slides ───
 
   @Post('slides')
@@ -104,6 +113,15 @@ export class ContentController {
   @RequirePermission('content', 'delete')
   deleteSlide(@Param('id') id: string, @CurrentUser('organizationId') orgId: string) {
     return this.content.deleteSlide(id, orgId)
+  }
+
+  @Post('slides/reorder')
+  @RequirePermission('content', 'update')
+  reorderSlides(
+    @Body() body: { sectionId: string; orders: { id: string; order: number }[] },
+    @CurrentUser('organizationId') orgId: string,
+  ) {
+    return this.content.reorderSlides(body.sectionId, body.orders, orgId)
   }
 
   // ─── Product Spotlights ───
@@ -183,6 +201,15 @@ export class ContentController {
   @RequirePermission('content', 'delete')
   deleteBanner(@Param('id') id: string, @CurrentUser('organizationId') orgId: string) {
     return this.content.deleteBanner(id, orgId)
+  }
+
+  @Post('banners/reorder')
+  @RequirePermission('content', 'update')
+  reorderBanners(
+    @Body() body: { orders: { id: string; order: number }[] },
+    @CurrentUser('organizationId') orgId: string,
+  ) {
+    return this.content.reorderBanners(body.orders, orgId)
   }
 
   // ─── Public ───

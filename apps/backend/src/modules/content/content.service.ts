@@ -10,6 +10,9 @@ import { DeleteSlideUseCase } from './use-cases/delete-slide.use-case'
 import { AddProductToSectionUseCase } from './use-cases/add-product-to-section.use-case'
 import { RemoveProductFromSectionUseCase } from './use-cases/remove-product-from-section.use-case'
 import { ReorderSpotlightsUseCase } from './use-cases/reorder-spotlights.use-case'
+import { ReorderSectionsUseCase } from './use-cases/reorder-sections.use-case'
+import { ReorderSlidesUseCase } from './use-cases/reorder-slides.use-case'
+import { ReorderBannersUseCase } from './use-cases/reorder-banners.use-case'
 import { FindBannersUseCase } from './use-cases/find-banners.use-case'
 import { CreateBannerUseCase } from './use-cases/create-banner.use-case'
 import { UpdateBannerUseCase } from './use-cases/update-banner.use-case'
@@ -30,6 +33,9 @@ export class ContentService {
     private addProductToSectionUseCase: AddProductToSectionUseCase,
     private removeProductFromSectionUseCase: RemoveProductFromSectionUseCase,
     private reorderSpotlightsUseCase: ReorderSpotlightsUseCase,
+    private reorderSectionsUseCase: ReorderSectionsUseCase,
+    private reorderSlidesUseCase: ReorderSlidesUseCase,
+    private reorderBannersUseCase: ReorderBannersUseCase,
     private findBannersUseCase: FindBannersUseCase,
     private createBannerUseCase: CreateBannerUseCase,
     private updateBannerUseCase: UpdateBannerUseCase,
@@ -68,6 +74,10 @@ export class ContentService {
     return this.deleteSectionUseCase.execute(id, organizationId)
   }
 
+  reorderSections(orders: { id: string; order: number }[], organizationId: string) {
+    return this.reorderSectionsUseCase.execute(orders, organizationId)
+  }
+
   // ─── Slides ───
 
   createSlide(data: {
@@ -104,6 +114,10 @@ export class ContentService {
 
   deleteSlide(id: string, organizationId: string) {
     return this.deleteSlideUseCase.execute(id, organizationId)
+  }
+
+  reorderSlides(sectionId: string, orders: { id: string; order: number }[], organizationId: string) {
+    return this.reorderSlidesUseCase.execute(sectionId, orders, organizationId)
   }
 
   // ─── Product Spotlights ───
@@ -157,6 +171,10 @@ export class ContentService {
 
   deleteBanner(id: string, organizationId: string) {
     return this.deleteBannerUseCase.execute(id, organizationId)
+  }
+
+  reorderBanners(orders: { id: string; order: number }[], organizationId: string) {
+    return this.reorderBannersUseCase.execute(orders, organizationId)
   }
 
   // ─── Public API (for storefront) ───
