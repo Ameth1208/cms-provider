@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, type ReactNode } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { api } from '@/lib/api-client'
 
@@ -21,9 +21,9 @@ export interface Slide {
   ctaText: string | null
   ctaLink: string | null
   bgColor: string | null
+  textColor: string | null
   buttonColor: string | null
   buttonTextColor: string | null
-  textColor: string | null
   order: number
   active: boolean
 }
@@ -60,13 +60,58 @@ export type ContentItem =
   | ({ kind: 'banner' } & Banner)
   | ({ kind: 'spotlight' } & Spotlight)
 
-export function useContent() {
+interface ContentContextType {
+  items: ContentItem[]
+  setItems: React.Dispatch<React.SetStateAction<ContentItem[]>>
+  loading: boolean
+  hasLoaded: boolean
+  refresh: () => Promise<void>
+  createSection: (body: { type: string; title?: string; order?: number }) => Promise<Section | undefined>
+  updateSection: (id: string, body: { title?: string; order?: number; active?: boolean }) => Promise<Section | undefined>
+  deleteSection: (id: string) => Promise<void>
+  createSlide: (body: {
+    sectionId: string
+    imageUrl: string
+    title?: string
+    subtitle?: string
+    ctaText?: string
+    ctaLink?: string
+    bgColor?: string
+    buttonColor?: string
+    buttonTextColor?: string
+    textColor?: string
+    order?: number
+  }) => Promise<Slide | undefined>
+  updateSlide: (id: string, body: Partial<Slide>) => Promise<Slide | undefined>
+  deleteSlide: (id: string) => Promise<void>
+  createBanner: (body: {
+    sectionId?: string
+    imageUrl?: string
+    title?: string
+    description?: string
+    link?: string
+    position?: string
+    order?: number
+  }) => Promise<Banner | undefined>
+  updateBanner: (id: string, body: Partial<Banner>) => Promise<Banner | undefined>
+  deleteBanner: (id: string) => Promise<void>
+  addSpotlight: (body: { sectionId: string; catalogItemId: string; order?: number }) => Promise<Spotlight | undefined>
+  removeSpotlight: (id: string) => Promise<void>
+  reorderSpotlights: (body: { sectionId: string; orders: { id: string; order: number }[] }) => Promise<void>
+  reorderSections: (orders: { id: string; order: number }[]) => Promise<void>
+  reorderSlides: (body: { sectionId: string; orders: { id: string; order: number }[] }) => Promise<void>
+  reorderBanners: (orders: { id: string; order: number }[]) => Promise<void>
+}
+
+const ContentContext = createContext<ContentContextType | null>(null)
+
+export function ContentProvider({ children }: { children: ReactNode }) {
   const { token } = useAuth()
   const [items, setItems] = useState<ContentItem[]>([])
   const [loading, setLoading] = useState(false)
   const [hasLoaded, setHasLoaded] = useState(false)
 
-  // Single consolidated refresh
+  // Fetch all content
   const refresh = useCallback(async () => {
     if (!token) return
     setLoading(true)
@@ -106,8 +151,7 @@ export function useContent() {
     }
   }, [token, hasLoaded, refresh])
 
-  // ─── Optimistic helpers ───
-
+  // Optimistic helpers
   const addOptimisticItem = useCallback((item: ContentItem) => {
     setItems((prev) => [...prev, item].sort((a, b) => {
       const orderA = 'order' in a ? a.order : 0
@@ -124,8 +168,7 @@ export function useContent() {
     setItems((prev) => prev.map((i) => (i.kind === kind && i.id === id ? { ...i, ...data } as ContentItem : i)))
   }, [])
 
-  // ─── Mutations with optimistic updates ───
-
+  // Section operations
   const createSection = useCallback(async (body: { type: string; title?: string; order?: number }) => {
     if (!token) return
     const tempId = `temp-section-${Date.now()}`
@@ -141,7 +184,6 @@ export function useContent() {
 
     try {
       const result = await api.post<Section>('/content/sections', body, token)
-      // Replace temp with real
       setItems((prev) => prev.map((i) => (i.kind === 'section' && i.id === tempId ? { ...result, kind: 'section' as const } : i)))
       return result
     } catch (err) {
@@ -149,25 +191,6 @@ export function useContent() {
       throw err
     }
   }, [token, addOptimisticItem, removeOptimisticItem])
-
-  const deleteSection = useCallback(async (id: string) => {
-    if (!token) return
-    const originalItems = [...items]
-    removeOptimisticItem(id, 'section')
-    // Also remove related slides and spotlights
-    setItems((prev) => prev.filter((i) => {
-      if (i.kind === 'slide' && i.sectionId === id) return false
-      if (i.kind === 'spotlight' && i.sectionId === id) return false
-      return true
-    }))
-
-    try {
-      await api.delete(`/content/sections/${id}`, token)
-    } catch (err) {
-      setItems(originalItems)
-      throw err
-    }
-  }, [token, items, removeOptimisticItem])
 
   const updateSection = useCallback(async (id: string, body: { title?: string; order?: number; active?: boolean }) => {
     if (!token) return
@@ -184,6 +207,25 @@ export function useContent() {
     }
   }, [token, items, updateOptimisticItem])
 
+  const deleteSection = useCallback(async (id: string) => {
+    if (!token) return
+    const originalItems = [...items]
+    removeOptimisticItem(id, 'section')
+    setItems((prev) => prev.filter((i) => {
+      if (i.kind === 'slide' && i.sectionId === id) return false
+      if (i.kind === 'spotlight' && i.sectionId === id) return false
+      return true
+    }))
+
+    try {
+      await api.delete(`/content/sections/${id}`, token)
+    } catch (err) {
+      setItems(originalItems)
+      throw err
+    }
+  }, [token, items, removeOptimisticItem])
+
+  // Slide operations
   const createSlide = useCallback(async (body: {
     sectionId: string
     imageUrl: string
@@ -227,19 +269,6 @@ export function useContent() {
     }
   }, [token, addOptimisticItem, removeOptimisticItem])
 
-  const deleteSlide = useCallback(async (id: string) => {
-    if (!token) return
-    const originalItems = [...items]
-    removeOptimisticItem(id, 'slide')
-
-    try {
-      await api.delete(`/content/slides/${id}`, token)
-    } catch (err) {
-      setItems(originalItems)
-      throw err
-    }
-  }, [token, items, removeOptimisticItem])
-
   const updateSlide = useCallback(async (id: string, body: Partial<Slide>) => {
     if (!token) return
     const originalItems = [...items]
@@ -255,6 +284,20 @@ export function useContent() {
     }
   }, [token, items, updateOptimisticItem])
 
+  const deleteSlide = useCallback(async (id: string) => {
+    if (!token) return
+    const originalItems = [...items]
+    removeOptimisticItem(id, 'slide')
+
+    try {
+      await api.delete(`/content/slides/${id}`, token)
+    } catch (err) {
+      setItems(originalItems)
+      throw err
+    }
+  }, [token, items, removeOptimisticItem])
+
+  // Banner operations
   const createBanner = useCallback(async (body: {
     sectionId?: string
     imageUrl?: string
@@ -290,19 +333,6 @@ export function useContent() {
     }
   }, [token, addOptimisticItem, removeOptimisticItem])
 
-  const deleteBanner = useCallback(async (id: string) => {
-    if (!token) return
-    const originalItems = [...items]
-    removeOptimisticItem(id, 'banner')
-
-    try {
-      await api.delete(`/content/banners/${id}`, token)
-    } catch (err) {
-      setItems(originalItems)
-      throw err
-    }
-  }, [token, items, removeOptimisticItem])
-
   const updateBanner = useCallback(async (id: string, body: Partial<Banner>) => {
     if (!token) return
     const originalItems = [...items]
@@ -318,10 +348,23 @@ export function useContent() {
     }
   }, [token, items, updateOptimisticItem])
 
+  const deleteBanner = useCallback(async (id: string) => {
+    if (!token) return
+    const originalItems = [...items]
+    removeOptimisticItem(id, 'banner')
+
+    try {
+      await api.delete(`/content/banners/${id}`, token)
+    } catch (err) {
+      setItems(originalItems)
+      throw err
+    }
+  }, [token, items, removeOptimisticItem])
+
+  // Spotlight operations
   const addSpotlight = useCallback(async (body: { sectionId: string; catalogItemId: string; order?: number }) => {
     if (!token) return
     const tempId = `temp-spotlight-${Date.now()}`
-    // We need catalog item info - fetch it or use optimistic placeholder
     const optimistic: ContentItem = {
       kind: 'spotlight',
       id: tempId,
@@ -355,81 +398,68 @@ export function useContent() {
     }
   }, [token, items, removeOptimisticItem])
 
+  // Reorder operations
+  const reorderSections = useCallback(async (orders: { id: string; order: number }[]) => {
+    if (!token) return
+    await api.post('/content/sections/reorder', { orders }, token)
+  }, [token])
+
+  const reorderSlides = useCallback(async (body: { sectionId: string; orders: { id: string; order: number }[] }) => {
+    if (!token) return
+    await api.post('/content/slides/reorder', body, token)
+  }, [token])
+
+  const reorderBanners = useCallback(async (orders: { id: string; order: number }[]) => {
+    if (!token) return
+    await api.post('/content/banners/reorder', { orders }, token)
+  }, [token])
+
   const reorderSpotlights = useCallback(async (body: { sectionId: string; orders: { id: string; order: number }[] }) => {
     if (!token) return
-    return api.post('/content/spotlights/reorder', body, token)
+    await api.post('/content/spotlights/reorder', body, token)
   }, [token])
 
-  // ─── Fetchers ───
-
-  const fetchSections = useCallback(async () => {
-    if (!token) return []
-    return api.get<Section[]>('/content/sections', token)
-  }, [token])
-
-  const fetchSlides = useCallback(async (sectionId?: string) => {
-    if (!token) return []
-    const sections = await api.get<(Section & { slides: Slide[] })[]>('/content/sections', token)
-    if (sectionId) {
-      return sections.find((s) => s.id === sectionId)?.slides ?? []
-    }
-    return sections.flatMap((s) => s.slides)
-  }, [token])
-
-  const fetchBanners = useCallback(async () => {
-    if (!token) return []
-    return api.get<Banner[]>('/content/banners', token)
-  }, [token])
-
-  const fetchSpotlights = useCallback(async (sectionId: string) => {
-    if (!token) return []
-    const sections = await api.get<(Section & { spotlights: Spotlight[] })[]>('/content/sections', token)
-    return sections.find((s) => s.id === sectionId)?.spotlights ?? []
-  }, [token])
-
-  return useMemo(() => ({
+  const value = useMemo(() => ({
     items,
     setItems,
     loading,
     hasLoaded,
     refresh,
-    fetchSections,
     createSection,
     updateSection,
     deleteSection,
-    fetchSlides,
     createSlide,
     updateSlide,
     deleteSlide,
-    fetchBanners,
     createBanner,
     updateBanner,
     deleteBanner,
-    fetchSpotlights,
     addSpotlight,
     removeSpotlight,
     reorderSpotlights,
+    reorderSections,
+    reorderSlides,
+    reorderBanners,
   }), [
-    items,
-    setItems,
-    loading,
-    hasLoaded,
-    refresh,
-    fetchSections,
-    createSection,
-    updateSection,
-    deleteSection,
-    fetchSlides,
-    createSlide,
-    updateSlide,
-    deleteSlide,
-    fetchBanners,
-    createBanner,
-    updateBanner,
-    deleteBanner,
-    fetchSpotlights,
-    addSpotlight,
-    removeSpotlight,
-    reorderSpotlights,
+    items, setItems, loading, hasLoaded, refresh,
+    createSection, updateSection, deleteSection,
+    createSlide, updateSlide, deleteSlide,
+    createBanner, updateBanner, deleteBanner,
+    addSpotlight, removeSpotlight, reorderSpotlights,
+    reorderSections, reorderSlides, reorderBanners,
   ])
+
+  return (
+    <ContentContext.Provider value={value}>
+      {children}
+    </ContentContext.Provider>
+  )
+}
+
+export function useContent() {
+  const context = useContext(ContentContext)
+  if (!context) {
+    throw new Error('useContent must be used within a ContentProvider')
+  }
+  return context
 }
