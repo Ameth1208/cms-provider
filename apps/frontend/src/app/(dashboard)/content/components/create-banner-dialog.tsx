@@ -8,11 +8,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useContent } from '../hooks/use-content'
 import { ImageUpload } from '@/components/image-upload'
+import { useTranslation } from '@/i18n/use-translation'
 
 const POSITIONS = [
-  { value: 'top', label: 'Arriba', desc: 'Antes de todo el contenido', icon: 'lucide:arrow-up' },
-  { value: 'middle', label: 'En medio', desc: 'Entre las secciones', icon: 'lucide:align-center-vertical' },
-  { value: 'bottom', label: 'Abajo', desc: 'Al final de la página', icon: 'lucide:arrow-down' },
+  { value: 'top', labelKey: 'content_banner_position_top', descKey: 'content_banner_position_top_desc', icon: 'lucide:arrow-up' },
+  { value: 'middle', labelKey: 'content_banner_position_middle', descKey: 'content_banner_position_middle_desc', icon: 'lucide:align-center-vertical' },
+  { value: 'bottom', labelKey: 'content_banner_position_bottom', descKey: 'content_banner_position_bottom_desc', icon: 'lucide:arrow-down' },
 ]
 
 interface Props {
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export function CreateBannerDialog({ open, onOpenChange, onSuccess }: Props) {
+  const { t } = useTranslation()
   const content = useContent()
   const [image, setImage] = useState('')
   const [title, setTitle] = useState('')
@@ -53,17 +55,17 @@ export function CreateBannerDialog({ open, onOpenChange, onSuccess }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
         <DialogHeader className="px-5 py-4 border-b border-border">
-          <DialogTitle className="text-base font-semibold">Nuevo banner</DialogTitle>
+          <DialogTitle className="text-base font-semibold">{t('content_new_banner_dialog')}</DialogTitle>
         </DialogHeader>
 
         <div className="p-5 space-y-4">
           {/* Preview */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Vista previa</Label>
+              <Label className="text-sm font-medium">{t('content_preview_label')}</Label>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Icon icon="lucide:eye" className="h-3.5 w-3.5" />
-                Vista previa en tiempo real
+                {t('content_preview_live_label')}
               </div>
             </div>
 
@@ -74,7 +76,7 @@ export function CreateBannerDialog({ open, onOpenChange, onSuccess }: Props) {
                 <div className="w-full h-full flex items-center justify-center">
                   <div className="text-center">
                     <Icon icon="lucide:image" className="h-16 w-16 mx-auto text-muted-foreground/30" />
-                    <p className="text-sm text-muted-foreground mt-2">Sin imagen</p>
+                    <p className="text-sm text-muted-foreground mt-2">{t('content_no_image')}</p>
                   </div>
                 </div>
               )}
@@ -83,14 +85,14 @@ export function CreateBannerDialog({ open, onOpenChange, onSuccess }: Props) {
               <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent flex items-center p-8">
                 <div className="max-w-md">
                   <p className="text-2xl font-bold text-white">
-                    {title || 'Título del banner'}
+                    {title || t('content_banner_title_preview')}
                   </p>
                   <p className="text-base text-white/80 mt-2">
-                    {description || 'Descripción del banner'}
+                    {description || t('content_banner_desc_preview')}
                   </p>
                   {link && (
                     <span className="inline-block mt-4 px-5 py-2 rounded-lg bg-white text-black text-sm font-medium">
-                      Ver más →
+                      {t('content_see_more')} →
                     </span>
                   )}
                 </div>
@@ -102,12 +104,12 @@ export function CreateBannerDialog({ open, onOpenChange, onSuccess }: Props) {
             {/* Left Column */}
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label className="text-sm font-medium">Imagen</Label>
+                <Label className="text-sm font-medium">{t('content_image_label')}</Label>
                 <ImageUpload value={image} onChange={setImage} folder="banners" />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-sm font-medium">Título</Label>
+                <Label className="text-sm font-medium">{t('content_banner_title_label')}</Label>
                 <Input 
                   value={title} 
                   onChange={(e) => setTitle(e.target.value)} 
@@ -117,7 +119,7 @@ export function CreateBannerDialog({ open, onOpenChange, onSuccess }: Props) {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-sm font-medium">Descripción</Label>
+                <Label className="text-sm font-medium">{t('content_banner_description_label')}</Label>
                 <Input 
                   value={description} 
                   onChange={(e) => setDescription(e.target.value)} 
@@ -130,7 +132,7 @@ export function CreateBannerDialog({ open, onOpenChange, onSuccess }: Props) {
             {/* Right Column */}
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label className="text-sm font-medium">Link</Label>
+                <Label className="text-sm font-medium">{t('content_banner_link_label')}</Label>
                 <Input 
                   value={link} 
                   onChange={(e) => setLink(e.target.value)} 
@@ -140,7 +142,7 @@ export function CreateBannerDialog({ open, onOpenChange, onSuccess }: Props) {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-sm font-medium">Posición</Label>
+                <Label className="text-sm font-medium">{t('content_banner_position_label')}</Label>
                 <div className="grid gap-2">
                   {POSITIONS.map((pos) => (
                     <button
